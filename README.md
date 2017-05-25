@@ -1,7 +1,7 @@
 # mock-proxy-middleware
 前后端分析项目中的本地mock及远程代理
 
-
+```javascript
 var mockMiddleware = require('mock-proxy-middleware')
 
 var app = express()
@@ -18,9 +18,10 @@ app.use(mockMiddleware({
   },
   mockPath: 'mock' // project`s mock dir name， default 'mock'
 }));
-
+```
 for example，a api like '/common-api/get_user_info', you can define a js file at
 ${project}/mock/common-api/get_user_info.js, it`s content like
+```javascript
 function (params) {
     return {
         err_no: 0,
@@ -30,7 +31,9 @@ function (params) {
         }
     }
 }
+```
 or
+```javascript
 {
     err_no: 0,
     err_msg: '',
@@ -38,6 +41,6 @@ or
         name: 'zhangsan'
     }
 }
-
+```
 for example another, a api like '/api/a/b/c', you can define a js file at
 ${project}/mock/api/a_b_c.js
