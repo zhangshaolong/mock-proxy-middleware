@@ -24,7 +24,7 @@ var encoding = 'UTF-8';
  /*
     opts.apiConfig = {
         type: 'prefix', // prefix or suffix
-        value: ['/api/', '/common-api/'] // or array like ['/api/', '/api-prefix/']
+        value: ['/api/', '/common-api/'] // string or array like ['/api/', '/api-prefix/']
     }
     opts.ignoreProxyPaths = {
         '/api/a/b/c': 1,
