@@ -1,0 +1,27 @@
+{
+  "name": "mock-proxy-middleware",
+  "version": "1.0.0",
+  "description": "基于vue+webpack的本地mock和远程代理",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zhangshaolong/mock-proxy-middleware.git"
+  },
+  "keywords": [
+    "mock",
+    "proxy",
+    "vue",
+    "webpack"
+  ],
+  "author": "zhangshaolong",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zhangshaolong/mock-proxy-middleware/issues"
+  },
+  "homepage": "https://github.com/zhangshaolong/mock-proxy-middleware#readme",
+  "dependencies": {
+  }
+}
