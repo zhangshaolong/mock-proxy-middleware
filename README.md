@@ -6,9 +6,9 @@
 
 ```javascript
 var mockMiddleware = require('mock-proxy-middleware')
-
+```
 if you use express server, you can use it like here:
-
+```javascript
 var app = express()
 
 app.use(mockMiddleware({
