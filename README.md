@@ -75,3 +75,5 @@ connect.server({
     }
 });
 ```
+    proxy mode
+    you can set param proxy=xxx.xxx.com:${prot} for current page, then all api proxy to server xxx.xxx.com, if you want use some api local mode, you can set ignoreProxyPaths config
