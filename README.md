@@ -31,6 +31,7 @@ function (params) {
     return {
         err_no: 0,
         err_msg: '',
+        sleep: 1000, // mock 1 second delay
         data: {
             name: 'zhangsan'
         }
