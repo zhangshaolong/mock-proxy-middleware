@@ -5,26 +5,26 @@
 
 'use strict';
 
-var queryString = require('querystring');
+const queryString = require('querystring');
 
-var URL = require('url');
+const URL = require('url');
 
-var http = require('http');
+const http = require('http');
 
-var formDataReg = /multipart\/form-data/;
+const formDataReg = /multipart\/form-data/;
 
-var path = require('path');
+const path = require('path');
 
-var fs = require('fs');
+const fs = require('fs');
 
-var proxyInfo;
+const encoding = 'UTF-8';
 
-var encoding = 'UTF-8';
+let proxyInfo;
 
  /*
     opts.apiConfig = {
         type: 'prefix', // prefix or suffix
-        value: ['/api/', '/common-api/'] // string or array like ['/api/', '/api-prefix/']
+        value: ['/api/', '/common-api/'] // or array like ['/api/', '/api-prefix/']
     }
     opts.ignoreProxyPaths = {
         '/api/a/b/c': 1,
@@ -34,66 +34,69 @@ var encoding = 'UTF-8';
     opts.mockPath = 'xxx'; // 默认为项目下的mock目录
 
 **/
-module.exports = function (opts) {
-    var apiConfig = opts.apiConfig;
-    var ignoreProxyPaths = opts.ignoreProxyPaths || {};
+module.exports = (opts) => {
+    const apiConfig = opts.apiConfig;
+    const ignoreProxyPaths = opts.ignoreProxyPaths || {};
+    const mockPath = opts.mockPath || 'mock';
     proxyInfo = opts.proxyInfo || proxyInfo;
-    var mockPath = opts.mockPath || 'mock';
 
-    return function (req, res, next) {
-        var reqUrl = req.url;
-        var withoutArgUrl = reqUrl.split(/\?/)[0];
-        var apiType = apiConfig.type;
-        var apiValue = apiConfig.value;
+    return (req, res, next) => {
+        const reqUrl = req.url;
+        const withoutArgUrl = reqUrl.split(/\?/)[0];
+        const apiType = apiConfig.type;
+        const apiValue = apiConfig.value;
         if (typeof apiValue === 'string') {
             apiValue = [apiValue];
         }
-        var len = apiValue.length;
+        const len = apiValue.length;
         if (apiType === 'prefix') {
-            for (var i = 0; i < len; i++) {
+            for (let i = 0; i < len; i++) {
                 apiValue[i] = apiValue[i];
             }
         }
-        var isApi = false;
+        let isApi = false;
         if (apiType === 'prefix') {
-            for (var i = 0; i < len; i++) {
+            for (let i = 0; i < len; i++) {
                 if (!isApi) {
                     isApi = reqUrl.indexOf(apiValue[i]) === 0;
                 }
             }
         } else if (apiType === 'suffix') {
-            for (var i = 0; i < len; i++) {
+            for (let i = 0; i < len; i++) {
                 if (!isApi) {
                     isApi = isApi = withoutArgUrl.endsWith(apiValue[i]);
                 }
             }
         }
         if (isApi) {
-            var contentType = req.headers['content-type'] || 'text/plain;charset=' + encoding;
+            const contentType = req.headers['content-type'] || 'text/plain;charset=' + encoding;
             res.writeHead(200, {'Content-Type': contentType});
-            var headers = {};
-            for (var key in req.headers) {
+            const headers = {};
+            for (let key in req.headers) {
                 headers[key] = req.headers[key];
             };
+            const method = req.method.toUpperCase();
+            const urlInfo = URL.parse(reqUrl, true);
 
-            var getProxyInfo = function () {
-                var pageUrl = req.headers.referer;
-
-                var query = URL.parse(pageUrl, true).query;
-
-                if (query && query.proxy) {
-                    var pair = query.proxy.replace(/^https?\:\/\//, '').split(':');
-                    return {
-                        host: pair[0],
-                        port: pair[1]
+            const getProxyInfo = () => {
+                const pageUrl = req.headers.referer;
+                if (pageUrl) {
+                    const query = URL.parse(pageUrl, true).query;
+                    if (query && query.proxy) {
+                        const pair = query.proxy.replace(/^https?\:\/\//, '').split(':');
+                        return {
+                            host: pair[0],
+                            port: pair[1] || 80
+                        }
                     }
                 }
             };
 
-            var doProxy = function (proxyInfo) {
-                headers.host = proxyInfo.host + ':' + (proxyInfo.port);
-                delete headers['accept-encoding']; // 去掉压缩数据
-                var options = {
+            const doProxy = (proxyInfo) => {
+                headers.host = proxyInfo.host + ':' + proxyInfo.port;
+                headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8';
+                // delete headers['accept-encoding']; // 去掉压缩数据
+                const options = {
                     host: proxyInfo.host,
                     port: proxyInfo.port,
                     path: reqUrl,
@@ -104,58 +107,79 @@ module.exports = function (opts) {
                     //   'Proxy-Authentication': 'Base ' + new Buffer('user:password').toString('base64')    // 替换为代理服务器用户名和密码
                     // }
                 };
+                if (method === 'POST') {
+                    let postData = '';
+                    req.setTimeout(0);
+                    req.on('error', (e) => {
+                        console.log(e.message);
+                    });
+                    req.on('data', (data) => {
+                        postData += data;
+                    });
 
-                var proxyReq = http.request(options, function (proxyRes) {
-                    proxyRes.pipe(res);
-                });
-
-                req.on('data', function (data) {
-                    proxyReq.write(data);
-                });
-
-                req.on('end', function () {
+                    req.on('end', () => {
+                        if (contentType.indexOf('application/x-www-form-urlencoded') > -1) {
+                            postData = queryString.parse(postData);
+                        } else if (contentType.indexOf('application/json') > -1) {
+                            postData = JSON.parse(postData);
+                        }
+                        postData = JSON.stringify(postData);
+                        headers.contentLength = postData.length;
+                        let proxyReq = http.request(options, (proxyRes) => {
+                            proxyRes.pipe(res);
+                        });
+                        proxyReq.setTimeout(0);
+                        proxyReq.on('error', (e) => {
+                            console.log(e.message);
+                        });
+                        proxyReq.end(postData);
+                    });
+                } else if (method === 'GET') {
+                    let postData = JSON.stringify(urlInfo.query);
+                    headers.contentLength = postData.length;
+                    let proxyReq = http.request(options, (proxyRes) => {
+                        proxyRes.pipe(res);
+                    });
                     proxyReq.end();
-                });
+                }
             };
-
             if (!proxyInfo) {
                 proxyInfo = getProxyInfo();
             }
 
             if (proxyInfo && !ignoreProxyPaths[withoutArgUrl]) {
-                proxyInfo.port = proxyInfo.port || 80;
                 doProxy(proxyInfo);
                 return ;
             }
 
-            var doMock = function (params, pathName) {
+            const doMock = (params, pathName) => {
                 try {
                     if (params.__url__) {
                         pathName = params.__url__;
                         delete params.__url__;
                     }
                     if (apiType === 'prefix') {
-                        var parts = pathName.replace(/^\//, '').split(/\//);
-                        var prefix = parts.shift();
+                        const parts = pathName.replace(/^\//, '').split(/\//);
+                        const prefix = parts.shift();
                         pathName = path.resolve(mockPath, prefix, parts.join('_'));
                     } else {
-                        for (var i = 0; i < len; i++) {
+                        for (let i = 0; i < len; i++) {
                             pathName = pathName.replace(apiValue[i], '');
                         }
                         pathName = path.resolve(process.cwd(), mockPath, pathName.replace(/^\//, '').replace(/\//g, '_'));
                     }
                     pathName += '.js';
-                    fs.exists(pathName, function (exist) {
+                    fs.exists(pathName, (exist) => {
                         if (exist) {
                             try {
-                                var content = new String(fs.readFileSync(pathName), encoding);
+                                const content = new String(fs.readFileSync(pathName), encoding);
                                 try {
-                                    var result = new Function('return ' + content)();
+                                    let result = new Function('return ' + content)();
                                     if (typeof result === 'function') {
                                         result = result(params);
                                     }
                                     if (!isNaN(result.sleep) && result.sleep > 0) {
-                                        setTimeout(function () {
+                                        setTimeout(() => {
                                             delete result.sleep;
                                             res.end(JSON.stringify(result));
                                         }, result.sleep);
@@ -195,20 +219,18 @@ module.exports = function (opts) {
                     }
                 }
             };
-            var method = req.method.toUpperCase();
-            var urlInfo = URL.parse(reqUrl, true);
             if (formDataReg.test(contentType)) {
-                req.once('data', function(data) {
+                req.once('data', (data) => {
                     doMock(queryString.parse(String(data, encoding)), urlInfo.pathname);
                 });
                 return;
             }
-            var params = '';
+            let params = '';
             if (method === 'POST') {
-                req.on('data', function (data) {
+                req.on('data', (data) => {
                     params += data;
                 });
-                req.on('end', function () {
+                req.on('end', () => {
                     if (contentType.indexOf('application/x-www-form-urlencoded') > -1) {
                         params = queryString.parse(params);
                     } else if (contentType.indexOf('application/json') > -1) {

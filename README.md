@@ -21,6 +21,10 @@ app.use(mockMiddleware({
     '/api/get_index_data': 1,
     '/api/user_info': 1
   },
+  proxyInfo: { // if use proxy mode，you can use it or set page url proxy args
+    host: '12.12.12.12',
+    port: 8080
+  },
   mockPath: 'mock' // project`s mock dir name， default 'mock'
 }));
 ```
