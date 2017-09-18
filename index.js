@@ -37,6 +37,7 @@ var encoding = 'UTF-8';
 module.exports = function (opts) {
     var apiConfig = opts.apiConfig;
     var ignoreProxyPaths = opts.ignoreProxyPaths || {};
+    proxyInfo = opts.proxyInfo || proxyInfo;
     var mockPath = opts.mockPath || 'mock';
 
     return function (req, res, next) {
@@ -84,13 +85,13 @@ module.exports = function (opts) {
                     var pair = query.proxy.replace(/^https?\:\/\//, '').split(':');
                     return {
                         host: pair[0],
-                        port: pair[1] || 80
+                        port: pair[1]
                     }
                 }
             };
 
             var doProxy = function (proxyInfo) {
-                headers.host = proxyInfo.host + ':' + proxyInfo.port;
+                headers.host = proxyInfo.host + ':' + (proxyInfo.port);
                 delete headers['accept-encoding']; // 去掉压缩数据
                 var options = {
                     host: proxyInfo.host,
@@ -122,6 +123,7 @@ module.exports = function (opts) {
             }
 
             if (proxyInfo && !ignoreProxyPaths[withoutArgUrl]) {
+                proxyInfo.port = proxyInfo.port || 80;
                 doProxy(proxyInfo);
                 return ;
             }
