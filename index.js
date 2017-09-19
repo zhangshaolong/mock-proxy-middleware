@@ -117,7 +117,7 @@ module.exports = (opts) => {
                             proxyRes.pipe(res);
                         });
                         proxyReq.end(postData);
-                    } else if (contentType.indexOf('application/json') > -1) {
+                    } else {
                         req.on('data', (data) => {
                             postData += data;
                         })
