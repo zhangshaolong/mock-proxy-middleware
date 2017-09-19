@@ -94,49 +94,44 @@ module.exports = (opts) => {
 
             const doProxy = (proxyInfo) => {
                 headers.host = proxyInfo.host + ':' + proxyInfo.port;
-                headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8';
+                headers['Content-Type'] = contentType;
                 // delete headers['accept-encoding']; // 去掉压缩数据
                 const options = {
                     host: proxyInfo.host,
                     port: proxyInfo.port,
                     path: reqUrl,
                     method: req.method,
+                    timeout: 30000,
                     headers: headers
                     // headers: {
                     //   // 如果代理服务器需要认证
                     //   'Proxy-Authentication': 'Base ' + new Buffer('user:password').toString('base64')    // 替换为代理服务器用户名和密码
                     // }
                 };
+                let postData = '';
                 if (method === 'POST') {
-                    let postData = '';
-                    req.setTimeout(0);
-                    req.on('error', (e) => {
-                        console.log(e.message);
-                    });
-                    req.on('data', (data) => {
-                        postData += data;
-                    });
-
-                    req.on('end', () => {
-                        if (contentType.indexOf('application/x-www-form-urlencoded') > -1) {
-                            postData = queryString.parse(postData);
-                        } else if (contentType.indexOf('application/json') > -1) {
-                            postData = JSON.parse(postData);
-                        }
-                        postData = JSON.stringify(postData);
-                        headers.contentLength = postData.length;
+                    if (contentType.indexOf('application/x-www-form-urlencoded') > -1) {
+                        postData = queryString.stringify(req.body || {});
+                        headers.contentLength = Buffer.byteLength(postData);
                         let proxyReq = http.request(options, (proxyRes) => {
                             proxyRes.pipe(res);
                         });
-                        proxyReq.setTimeout(0);
-                        proxyReq.on('error', (e) => {
-                            console.log(e.message);
-                        });
                         proxyReq.end(postData);
-                    });
+                    } else if (contentType.indexOf('application/json') > -1) {
+                        req.on('data', (data) => {
+                            postData += data;
+                        })
+                        req.on('end', () => {
+                            headers.contentLength = Buffer.byteLength(postData);
+                            let proxyReq = http.request(options, (proxyRes) => {
+                                proxyRes.pipe(res);
+                            });
+                            proxyReq.end(postData);
+                        })
+                    }
                 } else if (method === 'GET') {
-                    let postData = JSON.stringify(urlInfo.query);
-                    headers.contentLength = postData.length;
+                    postData = JSON.stringify(urlInfo.query);
+                    headers.contentLength = Buffer.byteLength(postData);
                     let proxyReq = http.request(options, (proxyRes) => {
                         proxyRes.pipe(res);
                     });
