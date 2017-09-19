@@ -130,7 +130,7 @@ module.exports = (opts) => {
                         proxyReq.on('error', (e) => {
                             console.log('proxyReq error: ' + e.message);
                         })
-                        proxyReq.end(postData);
+                        proxyReq.end(postData, encoding);
                     } else {
                         req.on('data', (data) => {
                             postData += data;
@@ -140,7 +140,7 @@ module.exports = (opts) => {
                             let proxyReq = http.request(options, (proxyRes) => {
                                 proxyRes.pipe(res);
                             });
-                            proxyReq.end(postData);
+                            proxyReq.end(postData, encoding);
                         })
                     }
                 } else if (method === 'GET') {
@@ -149,7 +149,7 @@ module.exports = (opts) => {
                     let proxyReq = http.request(options, (proxyRes) => {
                         proxyRes.pipe(res);
                     });
-                    proxyReq.end();
+                    proxyReq.end(postData, encoding);
                 }
             };
             if (!proxyInfo) {
