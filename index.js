@@ -69,8 +69,10 @@ module.exports = (opts) => {
             }
         }
         if (isApi) {
-            const contentType = req.headers['content-type'] || 'text/plain;charset=' + encoding;
-            res.writeHead(200, {'Content-Type': contentType});
+            const contentType = req.headers['content-type'];// || 'text/plain;charset=' + encoding;
+            if (contentType) {
+                res.writeHead(200, {'Content-Type': contentType});
+            }
             const headers = {};
             for (let key in req.headers) {
                 headers[key] = req.headers[key];
@@ -94,7 +96,9 @@ module.exports = (opts) => {
 
             const doProxy = (proxyInfo) => {
                 headers.host = proxyInfo.host + ':' + proxyInfo.port;
-                headers['Content-Type'] = contentType;
+                if (contentType) {
+                    headers['Content-Type'] = contentType;
+                }
                 // delete headers['accept-encoding']; // 去掉压缩数据
                 const options = {
                     host: proxyInfo.host,
@@ -110,19 +114,29 @@ module.exports = (opts) => {
                 };
                 let postData = '';
                 if (method === 'POST') {
-                    if (contentType.indexOf('application/x-www-form-urlencoded') > -1) {
-                        postData = queryString.stringify(req.body || {});
-                        headers.contentLength = Buffer.byteLength(postData);
+                    req.on('error', (e) => {
+                        console.log('req error: ' + e.message);
+                    })
+                    if (req.body) {
+                        if (contentType && contentType.indexOf('application/x-www-form-urlencoded') > -1) {
+                            postData = queryString.stringify(req.body);
+                        } else {
+                            postData = JSON.stringify(req.body);
+                        }
+                        headers.contentLength = postData.length;
                         let proxyReq = http.request(options, (proxyRes) => {
                             proxyRes.pipe(res);
                         });
+                        proxyReq.on('error', (e) => {
+                            console.log('proxyReq error: ' + e.message);
+                        })
                         proxyReq.end(postData);
                     } else {
                         req.on('data', (data) => {
                             postData += data;
                         })
                         req.on('end', () => {
-                            headers.contentLength = Buffer.byteLength(postData);
+                            headers.contentLength = postData.length;
                             let proxyReq = http.request(options, (proxyRes) => {
                                 proxyRes.pipe(res);
                             });
@@ -226,9 +240,9 @@ module.exports = (opts) => {
                     params += data;
                 });
                 req.on('end', () => {
-                    if (contentType.indexOf('application/x-www-form-urlencoded') > -1) {
+                    if (contentType && contentType.indexOf('application/x-www-form-urlencoded') > -1) {
                         params = queryString.parse(params);
-                    } else if (contentType.indexOf('application/json') > -1) {
+                    } else {
                         params = JSON.parse(params);
                     }
                     doMock(params, urlInfo.pathname);
