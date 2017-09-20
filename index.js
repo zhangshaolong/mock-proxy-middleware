@@ -30,17 +30,20 @@ let proxyInfo;
         '/api/a/b/c': 1,
         '/api/get_index_data': 1,
         '/api/user_info': 1
-    },
+    }
+    opts.proxyInfo = {
+        host: '1.1.1.1',
+        port: 8080
+    }
     opts.mockPath = 'xxx'; // 默认为项目下的mock目录
 
 **/
 module.exports = (opts) => {
-    const apiConfig = opts.apiConfig;
-    const ignoreProxyPaths = opts.ignoreProxyPaths || {};
-    const mockPath = opts.mockPath || 'mock';
-    proxyInfo = opts.proxyInfo || proxyInfo;
-
     return (req, res, next) => {
+        const apiConfig = opts.apiConfig;
+        const ignoreProxyPaths = opts.ignoreProxyPaths || {};
+        const mockPath = opts.mockPath || 'mock';
+        proxyInfo = opts.proxyInfo || proxyInfo;
         const reqUrl = req.url;
         const withoutArgUrl = reqUrl.split(/\?/)[0];
         const apiType = apiConfig.type;
@@ -126,8 +129,12 @@ module.exports = (opts) => {
                         headers.contentLength = postData.length;
                         let proxyReq = http.request(options, (proxyRes) => {
                             let headers = proxyRes.headers;
-                            for (let key in headers) {
-                                res.setHeader(key, headers[key]);
+                            try {
+                                for (let key in headers) {
+                                    res.setHeader(key, headers[key]);
+                                }
+                            } catch (e) {
+                                console.log('setHeader error', e.message);
                             }
                             proxyRes.pipe(res);
                         });
@@ -143,8 +150,12 @@ module.exports = (opts) => {
                             headers.contentLength = postData.length;
                             let proxyReq = http.request(options, (proxyRes) => {
                                 let headers = proxyRes.headers;
-                                for (let key in headers) {
-                                    res.setHeader(key, headers[key]);
+                                try {
+                                    for (let key in headers) {
+                                        res.setHeader(key, headers[key]);
+                                    }
+                                } catch (e) {
+                                    console.log('setHeader error', e.message);
                                 }
                                 proxyRes.pipe(res);
                             });
@@ -156,8 +167,12 @@ module.exports = (opts) => {
                     headers.contentLength = Buffer.byteLength(postData);
                     let proxyReq = http.request(options, (proxyRes) => {
                         let headers = proxyRes.headers;
-                        for (let key in headers) {
-                            res.setHeader(key, headers[key]);
+                        try {
+                            for (let key in headers) {
+                                res.setHeader(key, headers[key]);
+                            }
+                        } catch (e) {
+                            console.log('setHeader error', e.message);
                         }
                         proxyRes.pipe(res);
                     });
