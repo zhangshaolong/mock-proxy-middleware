@@ -125,6 +125,10 @@ module.exports = (opts) => {
                         }
                         headers.contentLength = postData.length;
                         let proxyReq = http.request(options, (proxyRes) => {
+                            let headers = proxyRes.headers;
+                            for (let key in headers) {
+                                res.setHeader(key, headers[key]);
+                            }
                             proxyRes.pipe(res);
                         });
                         proxyReq.on('error', (e) => {
@@ -138,6 +142,10 @@ module.exports = (opts) => {
                         req.on('end', () => {
                             headers.contentLength = postData.length;
                             let proxyReq = http.request(options, (proxyRes) => {
+                                let headers = proxyRes.headers;
+                                for (let key in headers) {
+                                    res.setHeader(key, headers[key]);
+                                }
                                 proxyRes.pipe(res);
                             });
                             proxyReq.end(postData, encoding);
@@ -147,6 +155,10 @@ module.exports = (opts) => {
                     postData = JSON.stringify(urlInfo.query);
                     headers.contentLength = Buffer.byteLength(postData);
                     let proxyReq = http.request(options, (proxyRes) => {
+                        let headers = proxyRes.headers;
+                        for (let key in headers) {
+                            res.setHeader(key, headers[key]);
+                        }
                         proxyRes.pipe(res);
                     });
                     proxyReq.end(postData, encoding);
