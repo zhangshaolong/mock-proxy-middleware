@@ -87,14 +87,14 @@ connect.server({
 if you use webpack-dev-server, you can use it like here on webpack.config.js:
 ```javascript
 devServer: {
-    contentBase: '/dist',
-    port: 8888,
-    historyApiFallback: true,
-    inline: true,
-    setup: function(app) {
-      app.use(mockProxyMiddleware(mockProxyConfig))
-    }
+  contentBase: '/dist',
+  port: 8888,
+  historyApiFallback: true,
+  inline: true,
+  setup: function(app) {
+    app.use(mockProxyMiddleware(mockProxyConfig))
   }
+}
 ```
     proxy mode
     you can set param proxy=xxx.xxx.com:${prot} for current page, then all api proxy to server xxx.xxx.com, if you want use some api local mode, you can set ignoreProxyPaths config
