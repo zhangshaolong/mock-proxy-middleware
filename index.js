@@ -73,9 +73,6 @@ module.exports = (opts) => {
         }
         if (isApi) {
             const contentType = req.headers['content-type'];// || 'text/plain;charset=' + encoding;
-            if (contentType) {
-                res.writeHead(200, {'Content-Type': contentType});
-            }
             const headers = {};
             for (let key in req.headers) {
                 headers[key] = req.headers[key];
@@ -129,10 +126,9 @@ module.exports = (opts) => {
                         headers.contentLength = postData.length;
                         let proxyReq = http.request(options, (proxyRes) => {
                             let headers = proxyRes.headers;
+                            let statusCode = proxyRes.statusCode;
                             try {
-                                for (let key in headers) {
-                                    res.setHeader(key, headers[key]);
-                                }
+                                res.writeHeader(statusCode, headers);
                             } catch (e) {
                                 console.log('setHeader error', e.message);
                             }
@@ -150,10 +146,9 @@ module.exports = (opts) => {
                             headers.contentLength = postData.length;
                             let proxyReq = http.request(options, (proxyRes) => {
                                 let headers = proxyRes.headers;
+                                let statusCode = proxyRes.statusCode;
                                 try {
-                                    for (let key in headers) {
-                                        res.setHeader(key, headers[key]);
-                                    }
+                                    res.writeHeader(statusCode, headers);
                                 } catch (e) {
                                     console.log('setHeader error', e.message);
                                 }
@@ -167,10 +162,9 @@ module.exports = (opts) => {
                     headers.contentLength = Buffer.byteLength(postData);
                     let proxyReq = http.request(options, (proxyRes) => {
                         let headers = proxyRes.headers;
+                        let statusCode = proxyRes.statusCode;
                         try {
-                            for (let key in headers) {
-                                res.setHeader(key, headers[key]);
-                            }
+                            res.writeHeader(statusCode, headers);
                         } catch (e) {
                             console.log('setHeader error', e.message);
                         }
