@@ -123,6 +123,7 @@ module.exports = (opts) => {
                         } else {
                             postData = JSON.stringify(req.body);
                         }
+                        console.log(`proxy request: \n\tMethod:${method}\n\tPath:${reqUrl}\n\tParams:${postData}`)
                         headers.contentLength = postData.length;
                         let proxyReq = http.request(options, (proxyRes) => {
                             let headers = proxyRes.headers;
@@ -154,12 +155,14 @@ module.exports = (opts) => {
                                 }
                                 proxyRes.pipe(res);
                             });
+                            console.log(`proxy request: \n\tMethod:${method}\n\tPath:${reqUrl}\n\tParams:${postData}`)
                             proxyReq.end(postData, encoding);
                         })
                     }
                 } else if (method === 'GET') {
                     postData = JSON.stringify(urlInfo.query);
                     headers.contentLength = Buffer.byteLength(postData);
+                    console.log(`proxy request: \n\tMethod:${method}\n\tPath:${reqUrl}\n\tParams:${postData}`)
                     let proxyReq = http.request(options, (proxyRes) => {
                         let headers = proxyRes.headers;
                         let statusCode = proxyRes.statusCode;
