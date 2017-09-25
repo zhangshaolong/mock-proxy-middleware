@@ -191,15 +191,13 @@ module.exports = (opts) => {
                         pathName = params.__url__;
                         delete params.__url__;
                     }
-                    if (apiType === 'prefix') {
-                        const parts = pathName.replace(/^\//, '').split(/\//);
-                        const prefix = parts.shift();
-                        pathName = path.resolve(mockPath, prefix, parts.join('_'));
-                    } else {
-                        for (let i = 0; i < len; i++) {
+                    for (let i = 0; i < len; i++) {
+                        if (pathName[apiType === 'prefix' ? 'startsWith' : 'endsWith'](apiValue[i])) {
                             pathName = pathName.replace(apiValue[i], '');
+                            const parts = pathName.replace(/^\//, '').split(/\//);
+                            pathName = path.resolve(mockPath, apiValue[i].replace(/^\/|\/$/g, '').replace(/\//g, '_'), parts.join('_'));
+                            break;
                         }
-                        pathName = path.resolve(process.cwd(), mockPath, pathName.replace(/^\//, '').replace(/\//g, '_'));
                     }
                     pathName += '.js';
                     fs.exists(pathName, (exist) => {
