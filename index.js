@@ -203,7 +203,7 @@ module.exports = (opts) => {
                     fs.exists(pathName, (exist) => {
                         if (exist) {
                             try {
-                                const content = new String(fs.readFileSync(pathName), encoding);
+                                const content = new String(fs.readFileSync(pathName, encoding), encoding);
                                 try {
                                     let result = new Function('return ' + content)();
                                     if (typeof result === 'function') {
@@ -221,15 +221,22 @@ module.exports = (opts) => {
                                         res.end(result);
                                     }
                                 } catch (e) {
-                                    res.end(JSON.stringify({
-                                        status: 500,
-                                        e: e
-                                    }));
+                                    try {
+                                        const content = fs.readFileSync(pathName, 'binary');
+                                        res.writeHeader(200);
+                                        res.write(content, 'binary');
+                                        res.end();
+                                    } catch (e) {
+                                        res.end(JSON.stringify({
+                                            status: 500,
+                                            e: pathName + '文件不存在~'
+                                        }));
+                                    }
                                 }
                             } catch (e) {
                                 res.end(JSON.stringify({
                                     status: 500,
-                                    e: pathName + '文件不存在~'
+                                    e: e
                                 }));
                             }
                         } else {
