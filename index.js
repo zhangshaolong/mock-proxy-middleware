@@ -181,7 +181,14 @@ module.exports = (opts) => {
             }
 
             if (proxyInfo && !ignoreProxyPaths[withoutArgUrl]) {
-                doProxy(proxyInfo);
+                try {
+                    doProxy(proxyInfo);
+                } catch (e) {
+                    res.end(JSON.stringify({
+                        status: 500,
+                        e: e
+                    }));
+                }
                 return ;
             }
 
