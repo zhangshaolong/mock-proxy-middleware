@@ -1,6 +1,6 @@
 {
   "name": "mock-proxy-middleware",
-  "version": "1.9.4",
+  "version": "1.9.5",
   "description": "开发前后端分析项目时本地mock和远程代理",
   "main": "index.js",
   "scripts": {
