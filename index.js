@@ -136,6 +136,10 @@ module.exports = (opts) => {
                             proxyRes.pipe(res);
                         });
                         proxyReq.on('error', (e) => {
+                            res.end(JSON.stringify({
+                                status: 500,
+                                e: e.message
+                            }));
                             console.log('proxyReq error: ' + e.message);
                         })
                         proxyReq.end(postData, encoding);
@@ -155,6 +159,13 @@ module.exports = (opts) => {
                                 }
                                 proxyRes.pipe(res);
                             });
+                            proxyReq.on('error', (e) => {
+                                res.end(JSON.stringify({
+                                    status: 500,
+                                    e: e.message
+                                }));
+                                console.log('proxyReq error: ' + e.message);
+                            })
                             console.log(`proxy request: \n\tHost:${options.host}\n\tPort:${options.port}\n\tMethod:${method}\n\tPath:${reqUrl}\n\tParams:${postData}`)
                             proxyReq.end(postData, encoding);
                         })
@@ -173,6 +184,13 @@ module.exports = (opts) => {
                         }
                         proxyRes.pipe(res);
                     });
+                    proxyReq.on('error', (e) => {
+                        res.end(JSON.stringify({
+                            status: 500,
+                            e: e.message
+                        }));
+                        console.log('proxyReq error: ' + e.message);
+                    })
                     proxyReq.end(postData, encoding);
                 }
             };
@@ -181,14 +199,7 @@ module.exports = (opts) => {
             }
 
             if (proxyInfo && !ignoreProxyPaths[withoutArgUrl]) {
-                try {
-                    doProxy(proxyInfo);
-                } catch (e) {
-                    res.end(JSON.stringify({
-                        status: 500,
-                        e: e
-                    }));
-                }
+                doProxy(proxyInfo);
                 return ;
             }
 
