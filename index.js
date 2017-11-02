@@ -245,23 +245,17 @@ module.exports = (opts) => {
                                         res.write(content, 'binary');
                                         res.end();
                                     } catch (e) {
-                                        res.end(JSON.stringify({
-                                            status: 500,
-                                            e: pathName + '文件不存在~'
-                                        }));
+                                        res.writeHeader(500);
+                                        res.end(JSON.stringify(e.message));
                                     }
                                 }
                             } catch (e) {
-                                res.end(JSON.stringify({
-                                    status: 500,
-                                    e: e
-                                }));
+                                res.writeHeader(500);
+                                res.end(JSON.stringify(e.message));
                             }
                         } else {
-                            res.end(JSON.stringify({
-                                status: 500,
-                                e: pathName + '文件不存在~'
-                            }));
+                            res.writeHeader(500);
+                            res.end(pathName + '文件不存在~');
                         }
                     });
                 } catch (e) {
@@ -269,9 +263,8 @@ module.exports = (opts) => {
                         result = json.parse(result);
                         res.end(result);
                     } catch (e) {
-                        res.end(JSON.stringify({
-                            status: 500
-                        }));
+                        res.writeHeader(500);
+                        res.end(JSON.stringify(e.message));
                     }
                 }
             };
