@@ -275,17 +275,21 @@ module.exports = (opts) => {
             }
             let params = '';
             if (method === 'POST') {
-                req.on('data', (data) => {
-                    params += data;
-                });
-                req.on('end', () => {
-                    if (contentType && contentType.indexOf('application/x-www-form-urlencoded') > -1) {
-                        params = queryString.parse(params);
-                    } else {
-                        params = JSON.parse(params);
-                    }
-                    doMock(params, urlInfo.pathname);
-                });
+                if (req.body) {
+                    doMock(req.body, urlInfo.pathname);
+                } else {
+                    req.on('data', (data) => {
+                        params += data;
+                    });
+                    req.on('end', () => {
+                        if (contentType && contentType.indexOf('application/x-www-form-urlencoded') > -1) {
+                            params = queryString.parse(params);
+                        } else {
+                            params = JSON.parse(params);
+                        }
+                        doMock(params, urlInfo.pathname);
+                    });
+                }
             } else if (method === 'GET') {
                 params = urlInfo.query;
                 doMock(params, urlInfo.pathname);
