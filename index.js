@@ -19,8 +19,6 @@ const fs = require('fs');
 
 const encoding = 'UTF-8';
 
-let proxyInfo;
-
  /*
     opts.apiConfig = {
         type: 'prefix', // prefix or suffix
@@ -39,6 +37,7 @@ let proxyInfo;
 
 **/
 module.exports = (opts) => {
+    let proxyInfo;
     return (req, res, next) => {
         const apiConfig = opts.apiConfig;
         const ignoreProxyPaths = opts.ignoreProxyPaths || {};
@@ -198,7 +197,7 @@ module.exports = (opts) => {
                 proxyInfo = getProxyInfo();
             }
 
-            if (proxyInfo && !ignoreProxyPaths[withoutArgUrl]) {
+            if (proxyInfo && proxyInfo.host && !ignoreProxyPaths[withoutArgUrl]) {
                 doProxy(proxyInfo);
                 return ;
             }
