@@ -208,11 +208,12 @@ module.exports = (opts) => {
                         pathName = params.__url__;
                         delete params.__url__;
                     }
+                    let slashReg = /^\/|\/$/g;
                     for (let i = 0; i < len; i++) {
                         if (pathName[apiType === 'prefix' ? 'startsWith' : 'endsWith'](apiValue[i])) {
                             pathName = pathName.replace(apiValue[i], '');
-                            const parts = pathName.replace(/^\//, '').split(/\//);
-                            pathName = path.resolve(mockPath, apiValue[i].replace(/^\/|\/$/g, '').replace(/\//g, '_'), parts.join('_'));
+                            const parts = pathName.replace(slashReg, '').split(/\//);
+                            pathName = path.resolve(mockPath, apiValue[i].replace(slashReg, '').replace(/\//g, '_'), parts.join('_'));
                             break;
                         }
                     }
