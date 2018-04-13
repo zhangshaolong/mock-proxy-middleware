@@ -19,7 +19,7 @@ app.use(mockMiddleware({
   ignoreProxyPaths: { // when use proxy mode, this apis use local mode
     '/api/a/b/c': 1,
     '/api/get_index_data': 1,
-    '/api/user_info': 1
+    '/api/user_info': 'aaa.bbb.ccc:8080' // you can set other host and port for muti porxy mode
   },
   proxyInfo: { // if use proxy mode，you can use it or set page url proxy args
     host: '12.12.12.12',

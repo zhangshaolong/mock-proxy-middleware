@@ -19,6 +19,8 @@ const fs = require('fs');
 
 const encoding = 'UTF-8';
 
+const proxyReg = /^([^:]+)(:(\d+))?$/;
+
  /*
     opts.apiConfig = {
         type: 'prefix', // prefix or suffix
@@ -27,7 +29,7 @@ const encoding = 'UTF-8';
     opts.ignoreProxyPaths = {
         '/api/a/b/c': 1,
         '/api/get_index_data': 1,
-        '/api/user_info': 1
+        '/api/user_info': 'aaa.bbb.ccc:8080' // 可以指定其他代理服务
     }
     opts.proxyInfo = {
         host: '1.1.1.1',
@@ -199,6 +201,15 @@ module.exports = (opts) => {
 
             if (proxyInfo && proxyInfo.host && !ignoreProxyPaths[withoutArgUrl]) {
                 doProxy(proxyInfo);
+                return ;
+            }
+
+            const isOtherProxy = proxyReg.test(ignoreProxyPaths[withoutArgUrl])
+            if (isOtherProxy) {
+                doProxy({
+                    host: RegExp.$1,
+                    port: RegExp.$3 || 80
+                });
                 return ;
             }
 
