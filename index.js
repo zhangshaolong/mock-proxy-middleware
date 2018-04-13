@@ -19,7 +19,7 @@ const fs = require('fs');
 
 const encoding = 'UTF-8';
 
-const proxyReg = /^([^:]+)(:(\d+))?$/;
+const proxyReg = /^([^:]+):(\d+)$/;
 
  /*
     opts.apiConfig = {
