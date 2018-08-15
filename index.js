@@ -158,7 +158,13 @@ module.exports = (opts) => {
                                 } catch (e) {
                                     console.log('setHeader error', e.message);
                                 }
-                                proxyRes.pipe(res);
+                                let data = '';
+                                proxyRes.on('data', (trunk) => {
+                                    data += trunk;
+                                });
+                                proxyRes.on('end', () => {
+                                    res.end(data, encoding);
+                                });
                             });
                             proxyReq.on('error', (e) => {
                                 res.end(JSON.stringify({
