@@ -21,6 +21,33 @@ const encoding = 'UTF-8';
 
 const proxyReg = /^([^:]+):(\d+)$/;
 
+const writeResponse = (proxyRes, res, encoding) => {
+    let chunks = [];
+    let size = 0;
+    proxyRes.on('data', (chunk) => {
+        chunks.push(chunk);
+        size += chunk.length;
+    });
+    proxyRes.on('end', () => {
+        let data = null;
+        switch (chunks.length) {
+        case 0: data = new Buffer(0);
+          break;
+        case 1: data = chunks[0];
+          break;
+        default:
+          data = new Buffer(size);
+          for (let i = 0, pos = 0, l = chunks.length; i < l; i++) {
+            let chunk = chunks[i];
+            chunk.copy(data, pos);
+            pos += chunk.length;
+          }
+          break;
+        }
+        res.end(data, encoding);
+    });
+}
+
  /*
     opts.apiConfig = {
         type: 'prefix', // prefix or suffix
@@ -134,7 +161,7 @@ module.exports = (opts) => {
                             } catch (e) {
                                 console.log('setHeader error', e.message);
                             }
-                            proxyRes.pipe(res);
+                            writeResponse(proxyRes, res, encoding);
                         });
                         proxyReq.on('error', (e) => {
                             res.end(JSON.stringify({
@@ -158,13 +185,7 @@ module.exports = (opts) => {
                                 } catch (e) {
                                     console.log('setHeader error', e.message);
                                 }
-                                let data = '';
-                                proxyRes.on('data', (trunk) => {
-                                    data += trunk;
-                                });
-                                proxyRes.on('end', () => {
-                                    res.end(data, encoding);
-                                });
+                                writeResponse(proxyRes, res, encoding);
                             });
                             proxyReq.on('error', (e) => {
                                 res.end(JSON.stringify({
@@ -189,7 +210,7 @@ module.exports = (opts) => {
                         } catch (e) {
                             console.log('setHeader error', e.message);
                         }
-                        proxyRes.pipe(res);
+                        writeResponse(proxyRes, res, encoding);
                     });
                     proxyReq.on('error', (e) => {
                         res.end(JSON.stringify({
