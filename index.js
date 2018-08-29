@@ -235,7 +235,7 @@ module.exports = (opts) => {
             if (isOtherProxy) {
                 doProxy({
                     host: RegExp.$1,
-                    port: RegExp.$3 || 80
+                    port: RegExp.$2 || 80
                 });
                 return ;
             }
