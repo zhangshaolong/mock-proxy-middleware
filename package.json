@@ -1,10 +1,11 @@
 {
   "name": "mock-proxy-middleware",
-  "version": "1.9.15",
-  "description": "开发前后端分析项目时本地mock和远程代理",
-  "main": "index.js",
+  "version": "1.9.16",
+  "description": "local server mock and proxy tool",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "uglifyjs index.js -o dist/index.js -c"
   },
   "repository": {
     "type": "git",
@@ -13,9 +14,10 @@
   "keywords": [
     "mock",
     "proxy",
-    "vue",
-    "webpack",
-    "gulp"
+    "server"
+  ],
+  "pre-commit": [
+    "build"
   ],
   "author": "zhangshaolong",
   "license": "MIT",
@@ -23,6 +25,9 @@
     "url": "https://github.com/zhangshaolong/mock-proxy-middleware/issues"
   },
   "homepage": "https://github.com/zhangshaolong/mock-proxy-middleware#readme",
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
+    "pre-commit": "^1.2.2",
+    "uglify-es": "^3.3.9"
   }
 }
