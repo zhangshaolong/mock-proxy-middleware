@@ -63,7 +63,8 @@ const writeResponse = (proxyRes, res, encoding) => {
   }
   opts.proxyInfo = {
     host: '1.1.1.1',
-    port: 8080
+    port: 8080,
+    redirect: function
   }
   opts.mockPath = 'xxx'; // default dir is 'mock' under project`s path
 **/
@@ -120,6 +121,10 @@ module.exports = (opts) => {
       }
 
       const doProxy = (proxyInfo) => {
+        let redirectUrl = reqUrl
+        if (proxyInfo.redirect) {
+          redirectUrl = proxyInfo.redirect(reqUrl)
+        }
         headers.host = proxyInfo.host + ':' + proxyInfo.port
         if (contentType) {
           headers['Content-Type'] = contentType
@@ -128,7 +133,7 @@ module.exports = (opts) => {
         const options = {
           host: proxyInfo.host,
           port: proxyInfo.port,
-          path: reqUrl,
+          path: redirectUrl,
           method: req.method,
           timeout: 30000,
           headers: headers
@@ -144,7 +149,7 @@ module.exports = (opts) => {
             } else {
               postData = JSON.stringify(req.body)
             }
-            console.log(`proxy request: \n\tHost:${options.host}\n\tPort:${options.port}\n\tMethod:${method}\n\tPath:${reqUrl}\n\tParams:${postData}`)
+            console.log(`proxy request: \n\tHost:${options.host}\n\tPort:${options.port}\n\tMethod:${method}\n\tPath:${redirectUrl}\n\tParams:${postData}`)
             headers.contentLength = postData.length
             let proxyReq = http.request(options, (proxyRes) => {
               let headers = proxyRes.headers
@@ -187,14 +192,14 @@ module.exports = (opts) => {
                 }))
                 console.log('proxyReq error: ' + e.message)
               })
-              console.log(`proxy request: \n\tHost:${options.host}\n\tPort:${options.port}\n\tMethod:${method}\n\tPath:${reqUrl}\n\tParams:${postData}`)
+              console.log(`proxy request: \n\tHost:${options.host}\n\tPort:${options.port}\n\tMethod:${method}\n\tPath:${redirectUrl}\n\tParams:${postData}`)
               proxyReq.end(postData, encoding)
             })
           }
         } else if (method === 'GET') {
           postData = JSON.stringify(urlInfo.query);
           headers.contentLength = Buffer.byteLength(postData);
-          console.log(`proxy request: \n\tHost:${options.host}\n\tPort:${options.port}\n\tMethod:${method}\n\tPath:${reqUrl}\n\tParams:${postData}`)
+          console.log(`proxy request: \n\tHost:${options.host}\n\tPort:${options.port}\n\tMethod:${method}\n\tPath:${redirectUrl}\n\tParams:${postData}`)
           let proxyReq = http.request(options, (proxyRes) => {
             let headers = proxyRes.headers
             let statusCode = proxyRes.statusCode

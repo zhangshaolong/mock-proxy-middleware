@@ -23,7 +23,10 @@ app.use(mockMiddleware({
   },
   proxyInfo: { // if use proxy mode，you can use it or set page url proxy args
     host: '12.12.12.12',
-    port: 8080
+    port: 8080,
+    redirect: (path) => { // could config rredirect path for remote api
+      return newPath
+    }
   },
   mockPath: 'mock' // project`s mock dir name， default 'mock'
 }));
