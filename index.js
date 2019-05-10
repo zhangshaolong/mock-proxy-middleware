@@ -21,6 +21,14 @@ const encoding = 'UTF-8'
 
 const proxyReg = /^([^:]+):(\d+)$/
 
+const showProxyLog = (options, method, redirectUrl, data) => {
+  if (data.length > 2000) {
+    console.log(`proxy request: \n\tHost:${options.host}\n\tPort:${options.port}\n\tMethod:${method}\n\tPath:${redirectUrl}\n\tParams:too large not display`)
+  } else {
+    console.log(`proxy request: \n\tHost:${options.host}\n\tPort:${options.port}\n\tMethod:${method}\n\tPath:${redirectUrl}\n\tParams:${data}`)
+  }
+}
+
 const writeResponse = (proxyRes, res, encoding) => {
   let chunks = []
   let size = 0
@@ -149,7 +157,7 @@ module.exports = (opts) => {
             } else {
               postData = JSON.stringify(req.body)
             }
-            console.log(`proxy request: \n\tHost:${options.host}\n\tPort:${options.port}\n\tMethod:${method}\n\tPath:${redirectUrl}\n\tParams:${postData}`)
+            showProxyLog(options, method, redirectUrl, postData)
             headers.contentLength = postData.length
             let proxyReq = http.request(options, (proxyRes) => {
               let headers = proxyRes.headers
@@ -192,14 +200,14 @@ module.exports = (opts) => {
                 }))
                 console.log('proxyReq error: ' + e.message)
               })
-              console.log(`proxy request: \n\tHost:${options.host}\n\tPort:${options.port}\n\tMethod:${method}\n\tPath:${redirectUrl}\n\tParams:${postData}`)
+              showProxyLog(options, method, redirectUrl, postData)
               proxyReq.end(postData, encoding)
             })
           }
         } else if (method === 'GET') {
-          postData = JSON.stringify(urlInfo.query);
-          headers.contentLength = Buffer.byteLength(postData);
-          console.log(`proxy request: \n\tHost:${options.host}\n\tPort:${options.port}\n\tMethod:${method}\n\tPath:${redirectUrl}\n\tParams:${postData}`)
+          postData = JSON.stringify(urlInfo.query)
+          headers.contentLength = Buffer.byteLength(postData)
+          showProxyLog(options, method, redirectUrl, postData)
           let proxyReq = http.request(options, (proxyRes) => {
             let headers = proxyRes.headers
             let statusCode = proxyRes.statusCode
