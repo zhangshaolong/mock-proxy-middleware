@@ -32,6 +32,13 @@ const showProxyLog = (options, method, redirectUrl, data) => {
 const writeResponse = (proxyRes, res, encoding) => {
   let chunks = []
   let size = 0
+  let headers = proxyRes.headers
+  let statusCode = proxyRes.statusCode
+  try {
+    res.writeHead(statusCode, headers)
+  } catch (e) {
+    console.log('setHeader error', e.message)
+  }
   proxyRes.on('data', (chunk) => {
     chunks.push(chunk)
     size += chunk.length
@@ -160,13 +167,6 @@ module.exports = (opts) => {
             showProxyLog(options, method, redirectUrl, postData)
             headers.contentLength = postData.length
             let proxyReq = http.request(options, (proxyRes) => {
-              let headers = proxyRes.headers
-              let statusCode = proxyRes.statusCode
-              try {
-                res.writeHeader(statusCode, headers)
-              } catch (e) {
-                console.log('setHeader error', e.message)
-              }
               writeResponse(proxyRes, res, encoding)
             })
             proxyReq.on('error', (e) => {
@@ -184,13 +184,6 @@ module.exports = (opts) => {
             req.on('end', () => {
               headers.contentLength = postData.length
               let proxyReq = http.request(options, (proxyRes) => {
-                let headers = proxyRes.headers
-                let statusCode = proxyRes.statusCode
-                try {
-                  res.writeHeader(statusCode, headers)
-                } catch (e) {
-                  console.log('setHeader error', e.message)
-                }
                 writeResponse(proxyRes, res, encoding)
               })
               proxyReq.on('error', (e) => {
@@ -209,13 +202,6 @@ module.exports = (opts) => {
           headers.contentLength = Buffer.byteLength(postData)
           showProxyLog(options, method, redirectUrl, postData)
           let proxyReq = http.request(options, (proxyRes) => {
-            let headers = proxyRes.headers
-            let statusCode = proxyRes.statusCode
-            try {
-              res.writeHeader(statusCode, headers)
-            } catch (e) {
-              console.log('setHeader error', e.message)
-            }
             writeResponse(proxyRes, res, encoding)
           })
           proxyReq.on('error', (e) => {
@@ -290,20 +276,20 @@ module.exports = (opts) => {
                 } catch (e) {
                   try {
                     const content = fs.readFileSync(pathName, 'binary')
-                    res.writeHeader(200)
+                    res.writeHead(200)
                     res.write(content, 'binary')
                     res.end()
                   } catch (e) {
-                    res.writeHeader(500)
+                    res.writeHead(500)
                     res.end(JSON.stringify(e.message))
                   }
                 }
               } catch (e) {
-                res.writeHeader(500);
+                res.writeHead(500);
                 res.end(JSON.stringify(e.message))
               }
             } else {
-              res.writeHeader(500)
+              res.writeHead(500)
               res.end(pathName + ' file is not existed~')
             }
           })
@@ -312,7 +298,7 @@ module.exports = (opts) => {
             result = json.parse(result)
             res.end(result)
           } catch (e) {
-            res.writeHeader(500)
+            res.writeHead(500)
             res.end(JSON.stringify(e.message))
           }
         }
