@@ -35,6 +35,11 @@ const writeResponse = (proxyRes, res, encoding) => {
   let headers = proxyRes.headers
   let statusCode = proxyRes.statusCode
   try {
+    if (headers) {
+      for (let key in headers) {
+        res.setHeader(key, headers[key])
+      }
+    }
     res.writeHead(statusCode, headers)
   } catch (e) {
     console.log('setHeader error', e.message)
