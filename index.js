@@ -40,7 +40,7 @@ const writeResponse = (proxyRes, res, encoding) => {
         res.setHeader(key, headers[key])
       }
     }
-    res.writeHead(statusCode, headers)
+    res.writeHead(statusCode)
   } catch (e) {
     console.log('setHeader error', e.message)
   }
