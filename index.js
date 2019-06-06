@@ -183,11 +183,32 @@ module.exports = (opts) => {
             })
             proxyReq.end(postData, encoding)
           } else {
-            req.on('data', (data) => {
-              postData += data
+            let chunks = []
+            let size = 0
+            req.on('data', (chunk) => {
+              chunks.push(chunk)
+              size += chunk.length
             })
             req.on('end', () => {
-              headers.contentLength = postData.length
+              let data = null
+              let len = chunks.length
+              switch (len) {
+              case 0:
+                data = new Buffer(0)
+                break
+              case 1:
+                data = chunks[0]
+                break
+              default:
+                data = new Buffer(size)
+                for (let i = 0, pos = 0; i < len; i++) {
+                  let chunk = chunks[i]
+                  chunk.copy(data, pos)
+                  pos += chunk.length
+                }
+                break
+              }
+              headers.contentLength = data.length
               let proxyReq = http.request(options, (proxyRes) => {
                 writeResponse(proxyRes, res, encoding)
               })
@@ -198,8 +219,8 @@ module.exports = (opts) => {
                 }))
                 console.log('proxyReq error: ' + e.message)
               })
-              showProxyLog(options, method, redirectUrl, postData)
-              proxyReq.end(postData, encoding)
+              showProxyLog(options, method, redirectUrl, data)
+              proxyReq.end(data, encoding)
             })
           }
         } else if (method === 'GET') {
