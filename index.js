@@ -11,8 +11,6 @@ const URL = require('url')
 
 const http = require('http')
 
-const formDataReg = /multipart\/form-data/
-
 const path = require('path')
 
 const fs = require('fs')
@@ -29,26 +27,14 @@ const showProxyLog = (options, method, redirectUrl, data) => {
   }
 }
 
-const writeResponse = (proxyRes, res, encoding) => {
+const proxyData = (original, callback) => {
   let chunks = []
   let size = 0
-  let headers = proxyRes.headers
-  let statusCode = proxyRes.statusCode
-  try {
-    if (headers) {
-      for (let key in headers) {
-        res.setHeader(key, headers[key])
-      }
-    }
-    res.writeHead(statusCode)
-  } catch (e) {
-    console.log('setHeader error', e.message)
-  }
-  proxyRes.on('data', (chunk) => {
+  original.on('data', (chunk) => {
     chunks.push(chunk)
     size += chunk.length
   })
-  proxyRes.on('end', () => {
+  original.on('end', () => {
     let data = null
     let len = chunks.length
     switch (len) {
@@ -67,6 +53,24 @@ const writeResponse = (proxyRes, res, encoding) => {
       }
       break
     }
+    callback(data)
+  })
+}
+
+const writeResponse = (proxyRes, res, encoding) => {
+  let headers = proxyRes.headers
+  let statusCode = proxyRes.statusCode
+  try {
+    if (headers) {
+      for (let key in headers) {
+        res.setHeader(key, headers[key])
+      }
+    }
+    res.writeHead(statusCode)
+  } catch (e) {
+    console.log('setHeader error', e.message)
+  }
+  proxyData(proxyRes, (data) => {
     res.end(data, encoding)
   })
 }
@@ -146,10 +150,7 @@ module.exports = (opts) => {
           redirectUrl = proxyInfo.redirect(reqUrl)
         }
         headers.host = proxyInfo.host + ':' + proxyInfo.port
-        if (contentType) {
-          headers['Content-Type'] = contentType
-        }
-        // delete headers['accept-encoding']
+        headers['Content-Type'] = contentType
         const options = {
           host: proxyInfo.host,
           port: proxyInfo.port,
@@ -157,6 +158,21 @@ module.exports = (opts) => {
           method: req.method,
           timeout: 30000,
           headers: headers
+        }
+
+        const proxy = (postData) => {
+          headers.contentLength = postData.length
+          let proxyReq = http.request(options, (proxyRes) => {
+            writeResponse(proxyRes, res, encoding)
+          })
+          proxyReq.on('error', (e) => {
+            res.end(JSON.stringify({
+              status: 500,
+              e: e.message
+            }))
+            console.log('proxyReq error: ' + e.message)
+          })
+          proxyReq.end(postData, encoding)
         }
         let postData = ''
         if (method === 'POST') {
@@ -169,75 +185,18 @@ module.exports = (opts) => {
             } else {
               postData = JSON.stringify(req.body)
             }
+            proxy(postData)
             showProxyLog(options, method, redirectUrl, postData)
-            headers.contentLength = postData.length
-            let proxyReq = http.request(options, (proxyRes) => {
-              writeResponse(proxyRes, res, encoding)
-            })
-            proxyReq.on('error', (e) => {
-              res.end(JSON.stringify({
-                status: 500,
-                e: e.message
-              }))
-              console.log('proxyReq error: ' + e.message)
-            })
-            proxyReq.end(postData, encoding)
           } else {
-            let chunks = []
-            let size = 0
-            req.on('data', (chunk) => {
-              chunks.push(chunk)
-              size += chunk.length
-            })
-            req.on('end', () => {
-              let data = null
-              let len = chunks.length
-              switch (len) {
-              case 0:
-                data = new Buffer(0)
-                break
-              case 1:
-                data = chunks[0]
-                break
-              default:
-                data = new Buffer(size)
-                for (let i = 0, pos = 0; i < len; i++) {
-                  let chunk = chunks[i]
-                  chunk.copy(data, pos)
-                  pos += chunk.length
-                }
-                break
-              }
-              headers.contentLength = data.length
-              let proxyReq = http.request(options, (proxyRes) => {
-                writeResponse(proxyRes, res, encoding)
-              })
-              proxyReq.on('error', (e) => {
-                res.end(JSON.stringify({
-                  status: 500,
-                  e: e.message
-                }))
-                console.log('proxyReq error: ' + e.message)
-              })
+            proxyData(req, (data) => {
+              proxy(data)
               showProxyLog(options, method, redirectUrl, data)
-              proxyReq.end(data, encoding)
             })
           }
         } else if (method === 'GET') {
           postData = JSON.stringify(urlInfo.query)
-          headers.contentLength = Buffer.byteLength(postData)
+          proxy(postData)
           showProxyLog(options, method, redirectUrl, postData)
-          let proxyReq = http.request(options, (proxyRes) => {
-            writeResponse(proxyRes, res, encoding)
-          })
-          proxyReq.on('error', (e) => {
-            res.end(JSON.stringify({
-              status: 500,
-              e: e.message
-            }))
-            console.log('proxyReq error: ' + e.message)
-          })
-          proxyReq.end(postData, encoding)
         }
       }
 
@@ -282,7 +241,7 @@ module.exports = (opts) => {
           fs.exists(pathName, (exist) => {
             if (exist) {
               try {
-                const content = new String(fs.readFileSync(pathName, encoding), encoding)
+                const content = new String(fs.readFileSync(pathName, encoding), encoding).trim()
                 try {
                   let result = new Function('return ' + content)()
                   if (typeof result === 'function') {
@@ -329,32 +288,27 @@ module.exports = (opts) => {
           }
         }
       }
-      if (formDataReg.test(contentType)) {
-        req.once('data', (data) => {
-          doMock(queryString.parse(String(data, encoding)), urlInfo.pathname)
-        })
-        return
-      }
       let params = ''
       if (method === 'POST') {
         if (req.body) {
-          doMock(req.body, urlInfo.pathname)
+          if (contentType.indexOf('application/x-www-form-urlencoded') > -1) {
+            params = queryString.parse(req.body)
+          } else {
+            params = JSON.parse(req.body)
+          }
+          doMock(params, urlInfo.pathname)
         } else {
-          req.on('data', (data) => {
-            params += data
-          })
-          req.on('end', () => {
-            if (contentType && contentType.indexOf('application/x-www-form-urlencoded') > -1) {
-              params = queryString.parse(params)
+          proxyData(req, (data) => {
+            if (contentType.indexOf('application/x-www-form-urlencoded') > -1) {
+              params = queryString.parse(String(data, encoding))
             } else {
-              params = JSON.parse(params)
+              params = JSON.parse(data)
             }
             doMock(params, urlInfo.pathname)
           })
         }
       } else if (method === 'GET') {
-        params = urlInfo.query
-        doMock(params, urlInfo.pathname)
+        doMock(urlInfo.query, urlInfo.pathname)
       }
     } else {
       return next()
