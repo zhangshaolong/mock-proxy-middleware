@@ -11,6 +11,8 @@ const URL = require('url')
 
 const http = require('http')
 
+const https = require('https')
+
 const path = require('path')
 
 const fs = require('fs')
@@ -129,6 +131,7 @@ module.exports = (opts) => {
       const method = req.method.toUpperCase()
       const urlInfo = URL.parse(reqUrl, true)
       const contentType = req.headers['content-type'] || 'text/plain;charset=' + encoding
+      const isHttps = req.protocol === 'https'
 
       const getProxyInfo = () => {
         const pageUrl = req.headers.referer
@@ -138,7 +141,7 @@ module.exports = (opts) => {
             const pair = query.proxy.replace(/^https?\:\/\//, '').split(':')
             return {
               host: pair[0],
-              port: pair[1] || 80
+              port: pair[1] || (isHttps ? 443 : 80)
             }
           }
         }
@@ -153,7 +156,7 @@ module.exports = (opts) => {
         headers['Content-Type'] = contentType
         const options = {
           host: proxyInfo.host,
-          port: proxyInfo.port,
+          port: proxyInfo.port || (isHttps ? 443 : 80),
           path: redirectUrl,
           method: req.method,
           timeout: 30000,
@@ -162,7 +165,7 @@ module.exports = (opts) => {
 
         const proxy = (postData) => {
           headers.contentLength = postData.length
-          let proxyReq = http.request(options, (proxyRes) => {
+          let proxyReq = (isHttps ? https : http)['request'](options, (proxyRes) => {
             writeResponse(proxyRes, res, encoding)
           })
           proxyReq.on('error', (e) => {
@@ -217,7 +220,7 @@ module.exports = (opts) => {
       if (isOtherProxy) {
         doProxy({
           host: RegExp.$1,
-          port: RegExp.$2 || 80
+          port: RegExp.$2 || (isHttps ? 443 : 80)
         })
         return
       }
