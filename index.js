@@ -21,6 +21,8 @@ const encoding = 'UTF-8'
 
 const proxyReg = /^([^:]+):(\d+)$/
 
+const cacheApis = {}
+
 const showProxyLog = (options, method, redirectUrl, data) => {
   if (data.length > 2000) {
     console.log(`proxy request: \n\tHost:${options.host}\n\tPort:${options.port}\n\tMethod:${method}\n\tPath:${redirectUrl}\n\tParams:too large not display`)
@@ -260,24 +262,11 @@ module.exports = (opts) => {
           pathName += '.js';
           fs.exists(pathName, (exist) => {
             if (exist) {
-              try {
-                const content = new String(fs.readFileSync(pathName, encoding), encoding)
+              let result = cacheApis[pathName]
+              if (!result) {
                 try {
-                  let result = new Function('return ' + content)()
-                  if (typeof result === 'function') {
-                    result = result(params)
-                  }
-                  if (!isNaN(result.sleep) && result.sleep > 0) {
-                    setTimeout(() => {
-                      delete result.sleep
-                      res.end(JSON.stringify(result))
-                    }, result.sleep)
-                  } else {
-                    if (typeof result !== 'string') {
-                      result = JSON.stringify(result)
-                    }
-                    res.end(result)
-                  }
+                  const content = new String(fs.readFileSync(pathName, encoding), encoding)
+                  result = cacheApis[pathName] = new Function('return ' + content)()
                 } catch (e) {
                   try {
                     const content = fs.readFileSync(pathName, 'binary')
@@ -288,10 +277,22 @@ module.exports = (opts) => {
                     res.writeHead(500)
                     res.end(JSON.stringify(e.message))
                   }
+                  return
                 }
-              } catch (e) {
-                res.writeHead(500);
-                res.end(JSON.stringify(e.message))
+              }
+              if (typeof result === 'function') {
+                result = result(params)
+              }
+              if (!isNaN(result.sleep) && result.sleep > 0) {
+                setTimeout(() => {
+                  delete result.sleep
+                  res.end(JSON.stringify(result))
+                }, result.sleep)
+              } else {
+                if (typeof result !== 'string') {
+                  result = JSON.stringify(result)
+                }
+                res.end(result)
               }
             } else {
               res.writeHead(500)
