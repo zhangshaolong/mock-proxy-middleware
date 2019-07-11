@@ -1,3 +1,4 @@
+    
 /**
  * @file 本地mock支持及远程代理 local mock and remote proxy
  * @author zhangshaolong
@@ -11,7 +12,7 @@ const URL = require('url')
 
 const http = require('http')
 
-const formDataReg = /multipart\/form-data/
+const https = require('https')
 
 const path = require('path')
 
@@ -21,7 +22,7 @@ const encoding = 'UTF-8'
 
 const proxyReg = /^([^:]+):(\d+)$/
 
-const cacheApis = {}
+const cachedApis = {}
 
 const showProxyLog = (options, method, redirectUrl, data) => {
   if (data.length > 2000) {
@@ -31,26 +32,14 @@ const showProxyLog = (options, method, redirectUrl, data) => {
   }
 }
 
-const writeResponse = (proxyRes, res, encoding) => {
+const proxyData = (original, callback) => {
   let chunks = []
   let size = 0
-  let headers = proxyRes.headers
-  let statusCode = proxyRes.statusCode
-  try {
-    if (headers) {
-      for (let key in headers) {
-        res.setHeader(key, headers[key])
-      }
-    }
-    res.writeHead(statusCode)
-  } catch (e) {
-    console.log('setHeader error', e.message)
-  }
-  proxyRes.on('data', (chunk) => {
+  original.on('data', (chunk) => {
     chunks.push(chunk)
     size += chunk.length
   })
-  proxyRes.on('end', () => {
+  original.on('end', () => {
     let data = null
     let len = chunks.length
     switch (len) {
@@ -69,6 +58,24 @@ const writeResponse = (proxyRes, res, encoding) => {
       }
       break
     }
+    callback(data)
+  })
+}
+
+const writeResponse = (proxyRes, res, encoding) => {
+  let headers = proxyRes.headers
+  let statusCode = proxyRes.statusCode
+  try {
+    if (headers) {
+      for (let key in headers) {
+        res.setHeader(key, headers[key])
+      }
+    }
+    res.writeHead(statusCode)
+  } catch (e) {
+    console.log('setHeader error', e.message)
+  }
+  proxyData(proxyRes, (data) => {
     res.end(data, encoding)
   })
 }
@@ -127,6 +134,7 @@ module.exports = (opts) => {
       const method = req.method.toUpperCase()
       const urlInfo = URL.parse(reqUrl, true)
       const contentType = req.headers['content-type'] || 'text/plain;charset=' + encoding
+      const isHttps = req.protocol === 'https'
 
       const getProxyInfo = () => {
         const pageUrl = req.headers.referer
@@ -136,7 +144,7 @@ module.exports = (opts) => {
             const pair = query.proxy.replace(/^https?\:\/\//, '').split(':')
             return {
               host: pair[0],
-              port: pair[1] || 80
+              port: pair[1] || (isHttps ? 443 : 80)
             }
           }
         }
@@ -148,17 +156,29 @@ module.exports = (opts) => {
           redirectUrl = proxyInfo.redirect(reqUrl)
         }
         headers.host = proxyInfo.host + ':' + proxyInfo.port
-        if (contentType) {
-          headers['Content-Type'] = contentType
-        }
-        // delete headers['accept-encoding']
+        headers['Content-Type'] = contentType
         const options = {
           host: proxyInfo.host,
-          port: proxyInfo.port,
+          port: proxyInfo.port || (isHttps ? 443 : 80),
           path: redirectUrl,
           method: req.method,
           timeout: 30000,
           headers: headers
+        }
+
+        const proxy = (postData) => {
+          headers.contentLength = postData.length
+          let proxyReq = (isHttps ? https : http)['request'](options, (proxyRes) => {
+            writeResponse(proxyRes, res, encoding)
+          })
+          proxyReq.on('error', (e) => {
+            res.end(JSON.stringify({
+              status: 500,
+              e: e.message
+            }))
+            console.log('proxyReq error: ' + e.message)
+          })
+          proxyReq.end(postData, encoding)
         }
         let postData = ''
         if (method === 'POST') {
@@ -171,54 +191,18 @@ module.exports = (opts) => {
             } else {
               postData = JSON.stringify(req.body)
             }
+            proxy(postData)
             showProxyLog(options, method, redirectUrl, postData)
-            headers.contentLength = postData.length
-            let proxyReq = http.request(options, (proxyRes) => {
-              writeResponse(proxyRes, res, encoding)
-            })
-            proxyReq.on('error', (e) => {
-              res.end(JSON.stringify({
-                status: 500,
-                e: e.message
-              }))
-              console.log('proxyReq error: ' + e.message)
-            })
-            proxyReq.end(postData, encoding)
           } else {
-            req.on('data', (data) => {
-              postData += data
-            })
-            req.on('end', () => {
-              headers.contentLength = postData.length
-              let proxyReq = http.request(options, (proxyRes) => {
-                writeResponse(proxyRes, res, encoding)
-              })
-              proxyReq.on('error', (e) => {
-                res.end(JSON.stringify({
-                  status: 500,
-                  e: e.message
-                }))
-                console.log('proxyReq error: ' + e.message)
-              })
-              showProxyLog(options, method, redirectUrl, postData)
-              proxyReq.end(postData, encoding)
+            proxyData(req, (data) => {
+              proxy(data)
+              showProxyLog(options, method, redirectUrl, data)
             })
           }
         } else if (method === 'GET') {
           postData = JSON.stringify(urlInfo.query)
-          headers.contentLength = Buffer.byteLength(postData)
+          proxy(postData)
           showProxyLog(options, method, redirectUrl, postData)
-          let proxyReq = http.request(options, (proxyRes) => {
-            writeResponse(proxyRes, res, encoding)
-          })
-          proxyReq.on('error', (e) => {
-            res.end(JSON.stringify({
-              status: 500,
-              e: e.message
-            }))
-            console.log('proxyReq error: ' + e.message)
-          })
-          proxyReq.end(postData, encoding)
         }
       }
 
@@ -239,7 +223,7 @@ module.exports = (opts) => {
       if (isOtherProxy) {
         doProxy({
           host: RegExp.$1,
-          port: RegExp.$2 || 80
+          port: RegExp.$2 || (isHttps ? 443 : 80)
         })
         return
       }
@@ -250,7 +234,7 @@ module.exports = (opts) => {
             pathName = params.__url__
             delete params.__url__
           }
-          let slashReg = /^\/|\/$/g;
+          let slashReg = /^\/|\/$/g
           for (let i = 0; i < len; i++) {
             if (pathName[apiType === 'prefix' ? 'startsWith' : 'endsWith'](apiValue[i])) {
               pathName = pathName.replace(apiValue[i], '')
@@ -259,14 +243,17 @@ module.exports = (opts) => {
               break
             }
           }
-          pathName += '.js';
+          pathName += '.js'
           fs.exists(pathName, (exist) => {
             if (exist) {
-              let result = cacheApis[pathName]
+              let result = cachedApis[pathName]
               if (!result) {
                 try {
-                  const content = new String(fs.readFileSync(pathName, encoding), encoding)
-                  result = cacheApis[pathName] = new Function('return ' + content)()
+                  let content = new String(fs.readFileSync(pathName, encoding), encoding).trim()
+                  if (/^(?:function|\{)/.test(content)) {
+                    content = 'return ' + content
+                  }
+                  result = cachedApis[pathName] = Function(content)()
                 } catch (e) {
                   try {
                     const content = fs.readFileSync(pathName, 'binary')
@@ -309,32 +296,27 @@ module.exports = (opts) => {
           }
         }
       }
-      if (formDataReg.test(contentType)) {
-        req.once('data', (data) => {
-          doMock(queryString.parse(String(data, encoding)), urlInfo.pathname)
-        })
-        return
-      }
       let params = ''
       if (method === 'POST') {
         if (req.body) {
-          doMock(req.body, urlInfo.pathname)
+          if (contentType.indexOf('application/x-www-form-urlencoded') > -1) {
+            params = queryString.parse(req.body)
+          } else {
+            params = JSON.parse(req.body)
+          }
+          doMock(params, urlInfo.pathname)
         } else {
-          req.on('data', (data) => {
-            params += data
-          })
-          req.on('end', () => {
-            if (contentType && contentType.indexOf('application/x-www-form-urlencoded') > -1) {
-              params = queryString.parse(params)
+          proxyData(req, (data) => {
+            if (contentType.indexOf('application/x-www-form-urlencoded') > -1) {
+              params = queryString.parse(String(data, encoding))
             } else {
-              params = JSON.parse(params)
+              params = JSON.parse(data)
             }
             doMock(params, urlInfo.pathname)
           })
         }
       } else if (method === 'GET') {
-        params = urlInfo.query
-        doMock(params, urlInfo.pathname)
+        doMock(urlInfo.query, urlInfo.pathname)
       }
     } else {
       return next()
