@@ -246,14 +246,19 @@ module.exports = (opts) => {
           pathName += '.js'
           fs.exists(pathName, (exist) => {
             if (exist) {
-              let result = cachedApis[pathName]
-              if (!result) {
+              let mtime = fs.statSync(pathName).mtime.getTime()
+              let cachedApi = cachedApis[pathName]
+              if (!cachedApi || cachedApi.mtime !== mtime) {
                 try {
                   let content = new String(fs.readFileSync(pathName, encoding), encoding).trim()
                   if (/^(?:function|\{)/.test(content)) {
                     content = 'return ' + content
                   }
-                  result = cachedApis[pathName] = Function(content)()
+                  let result = Function(content)()
+                  cachedApis[pathName] = cachedApi = {
+                    result,
+                    mtime
+                  }
                 } catch (e) {
                   try {
                     const content = fs.readFileSync(pathName, 'binary')
@@ -267,6 +272,7 @@ module.exports = (opts) => {
                   return
                 }
               }
+              let result = cachedApi.result
               if (typeof result === 'function') {
                 result = result(params)
               }
