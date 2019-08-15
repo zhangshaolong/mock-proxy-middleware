@@ -1,6 +1,8 @@
 # mock-proxy-middleware
 前后端分离项目中的本地mock及远程代理
 
+[qa mock for test demo](https://github.com/zhangshaolong/mock-proxy-tool "mock demo")
+
     install
     npm install mock-proxy-middleware --save-dev
 
