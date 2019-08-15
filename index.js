@@ -276,16 +276,17 @@ module.exports = (opts) => {
               if (typeof result === 'function') {
                 result = result(params)
               }
-              if (!isNaN(result.sleep) && result.sleep > 0) {
+              res.writeHead(200, {'Content-Type': 'text/plain;charset=' + encoding})
+              if (!isNaN(result.sleep)) {
                 setTimeout(() => {
                   delete result.sleep
-                  res.end(JSON.stringify(result))
+                  res.end(JSON.stringify(result), encoding)
                 }, result.sleep)
               } else {
                 if (typeof result !== 'string') {
                   result = JSON.stringify(result)
                 }
-                res.end(result)
+                res.end(result, encoding)
               }
             } else {
               res.writeHead(500)
