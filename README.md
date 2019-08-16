@@ -103,3 +103,16 @@ devServer: {
 ```
     proxy mode
     you can set param proxy=xxx.xxx.com:${prot} for current page, then all api proxy to server xxx.xxx.com, if you want use some api local mode, you can set ignoreProxyPaths config
+
+if you want to cache mock status by prev request, you can do it like this:
+```javascript
+let times = 0
+return function () {
+  return {
+    code: xxx,
+    data: {
+      times: times++ // this can cache prev value
+    }
+  }
+}
+```

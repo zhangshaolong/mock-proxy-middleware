@@ -251,6 +251,8 @@ module.exports = (opts) => {
               if (!cachedApi || cachedApi.mtime !== mtime) {
                 try {
                   let content = new String(fs.readFileSync(pathName, encoding), encoding).trim()
+                  // 支持在mock配置一些描述信息，实现对API生成接口文档
+                  content = content.replace(/^\s*(?:\<meta\>[\s\S]*?<\/meta\>\s*)?/im, '')
                   if (/^(?:function|\{)/.test(content)) {
                     content = 'return ' + content
                   }
