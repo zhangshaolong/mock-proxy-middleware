@@ -281,8 +281,9 @@ module.exports = (opts) => {
               res.writeHead(200, {'Content-Type': 'text/plain;charset=' + encoding})
               if (!isNaN(result.sleep)) {
                 setTimeout(() => {
-                  delete result.sleep
-                  res.end(JSON.stringify(result), encoding)
+                  let copy = JSON.parse(JSON.stringify(result))
+                  delete copy.sleep
+                  res.end(JSON.stringify(copy), encoding)
                 }, result.sleep)
               } else {
                 if (typeof result !== 'string') {
