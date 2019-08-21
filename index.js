@@ -281,9 +281,17 @@ module.exports = (opts) => {
               res.writeHead(200, {'Content-Type': 'text/plain;charset=' + encoding})
               if (!isNaN(result.sleep)) {
                 setTimeout(() => {
-                  let copy = JSON.parse(JSON.stringify(result))
-                  delete copy.sleep
-                  res.end(JSON.stringify(copy), encoding)
+                  try {
+                    let copy = JSON.parse(JSON.stringify(result))
+                    delete copy.sleep
+                    res.end(JSON.stringify(copy), encoding)
+                  } catch (e) {
+                    res.end(JSON.stringify({
+                      code: 500,
+                      url: reqUrl,
+                      e: e
+                    }), encoding)
+                  }
                 }, result.sleep)
               } else {
                 if (typeof result !== 'string') {
@@ -309,19 +317,15 @@ module.exports = (opts) => {
       let params = ''
       if (method === 'POST') {
         if (req.body) {
-          if (contentType.indexOf('application/x-www-form-urlencoded') > -1) {
-            params = queryString.parse(req.body)
-          } else {
-            params = JSON.parse(req.body)
-          }
+          try {
+            params = contentType.indexOf('application/x-www-form-urlencoded') > -1 ? queryString.parse(req.body) : JSON.parse(req.body)
+          } catch (e) {}
           doMock(params, urlInfo.pathname)
         } else {
           proxyData(req, (data) => {
-            if (contentType.indexOf('application/x-www-form-urlencoded') > -1) {
-              params = queryString.parse(String(data, encoding))
-            } else {
-              params = JSON.parse(data)
-            }
+            try {
+              params = contentType.indexOf('application/x-www-form-urlencoded') > -1 ? queryString.parse(String(data, encoding)) : JSON.parse(data)
+            } catch (e) {}
             doMock(params, urlInfo.pathname)
           })
         }
