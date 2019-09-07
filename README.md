@@ -116,3 +116,5 @@ return function () {
   }
 }
 ```
+
+scaffold is a demo project with mock proxy tool [scaffold](https://github.com/zhangshaolong/scaffold "scaffold lib")
