@@ -1,5 +1,6 @@
 # mock-proxy-middleware
 前后端分离项目中的本地mock及远程代理
+注意：2.0+版本针对参数做了一些格式调整，不兼容低版本，如果需要低版本请找对应版本(1.9.30)npm包
 
 [qa mock for test demo](https://github.com/zhangshaolong/mock-proxy-tool "mock demo")
 
@@ -14,23 +15,24 @@ if you use express server, you can use it like here:
 var app = express()
 
 app.use(mockMiddleware({
-  apiConfig: {
-    type: 'prefix', // prefix or suffix
-    value: ['/api/', '/common-api/'] // string or array like ['/api/', ...]
-  },
-  ignoreProxyPaths: { // when use proxy mode, this apis use local mode
-    '/api/a/b/c': 1,
-    '/api/get_index_data': 1,
-    '/api/user_info': 'aaa.bbb.ccc:8080' // you can set other host and port for muti porxy mode
-  },
-  proxyInfo: { // if use proxy mode，you can use it or set page url proxy args
+  type: 'prefix', // prefix or suffix
+  rules: ['/api/', '/common-api/'], // string or array like ['/api/', ...]
+  proxyConfig: {
     host: '12.12.12.12',
     port: 8080,
     redirect: (path) => { // could config rredirect path for remote api
-      return newPath
+      return path
+    },
+    ignorePaths: { // when use proxy mode, this apis use local mode
+      '/api/get_index_data': 1,
+      '/api/user_info': 'aaa.bbb.ccc:8080' // you can set other host and port for muti porxy mode
     }
   },
-  mockPath: 'mock' // project`s mock dir name， default 'mock'
+  mockConfig: {
+    path: 'mock', // project`s mock dir name， default 'mock'
+    ext: '.js'
+  }
+
 }));
 ```
 for example，a api like '/common-api/get_user_info', you can define a js file at
@@ -59,7 +61,6 @@ or
 ```
 for example another, a api like '/api/a/b/c', you can define a js file at
 ${project}/mock/api/a_b_c.js
-
 if you use gulp-connect server, you can use it like here:
 ```javascript
 var connect = require('gulp-connect');
@@ -70,20 +71,13 @@ connect.server({
     middleware: function(connect, opt) {
         return [
             mockMiddleware({
-                apiConfig: {
-                    type: 'prefix', // prefix or suffix
-                    value: ['/api/', '/common-api/'] // string or array like ['/api/', ...]
-                },
-                ignoreProxyPaths: { // when use proxy mode, this apis use local mode
-                    '/api/a/b/c': 1,
-                    '/api/get_index_data': 1,
-                    '/api/user_info': 1
-                },
-                /**proxyInfo: { // proxy mode
+                type: 'prefix', // prefix or suffix
+                value: ['/api/', '/common-api/'] // string or array like ['/api/', ...],
+                proxyConfig: { // proxy mode
                     host: '1.1.1.1',
                     port: 8080
-                },**/
-                mockPath: 'mock' // project`s mock dir name， default 'mock'
+                },
+                mockConfig: {}
             })
         ];
     }
@@ -101,9 +95,6 @@ devServer: {
   }
 }
 ```
-    proxy mode
-    you can set param proxy=xxx.xxx.com:${prot} for current page, then all api proxy to server xxx.xxx.com, if you want use some api local mode, you can set ignoreProxyPaths config
-
 if you want to cache mock status by prev request, you can do it like this:
 ```javascript
 let times = 0
@@ -116,5 +107,4 @@ return function () {
   }
 }
 ```
-
 scaffold is a demo project with mock proxy tool [scaffold](https://github.com/zhangshaolong/scaffold "scaffold lib")

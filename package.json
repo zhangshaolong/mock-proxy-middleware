@@ -1,11 +1,11 @@
 {
   "name": "mock-proxy-middleware",
-  "version": "1.9.30",
+  "version": "2.0.0",
   "description": "local server mock and proxy tool",
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "uglifyjs index.js -o dist/index.js -c"
+    "build": "uglifyjs src/index.js -o dist/index.js -c & (uglifyjs src/utils.js -o dist/utils.js -c) & (uglifyjs src/mock.js -o dist/mock.js -c) & (uglifyjs src/proxy.js -o dist/proxy.js -c)"
   },
   "repository": {
     "type": "git",
