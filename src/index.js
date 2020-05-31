@@ -47,14 +47,14 @@ module.exports = (opts) => {
       }
       utilsTool.getParams(req, method, isFormData).then((params) => {
         let proxyConfig = proxyTool.getProxy(req, opts.proxyConfig)
-      if (proxyConfig) {
-      	if (method === 'GET') {
-      		params = JSON.stringify(params)
-      	}
-        proxyTool.doProxy(req, res, headers, params, method, proxyConfig)
-      } else {
-        mockTool.doMock(req, res, params, opts)
-      }
+        if (proxyConfig) {
+        	if (method === 'GET') {
+        		params = JSON.stringify(params)
+        	}
+          proxyTool.doProxy(req, res, headers, params, method, proxyConfig)
+        } else {
+          mockTool.doMock(req, res, params, opts)
+        }
       })
     } else {
       return next()

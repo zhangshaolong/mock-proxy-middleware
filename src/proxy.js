@@ -20,7 +20,6 @@ const showProxyLog = (options, method, redirectUrl, data) => {
 
 const proxyResponse = (proxyRes, res) => {
   let headers = proxyRes.headers
-  console.log('headers', JSON.stringify(headers))
   let statusCode = proxyRes.statusCode
   try {
     if (headers) {
@@ -67,6 +66,7 @@ const doProxy = (request, response, headers, params, method, proxyConfig) => {
     method: request.method,
     headers: headers,
     timeout: 30000,
+    rejectUnauthorized: false
   }
   const proxy = (postData) => {
     let proxyReq = (isHttps ? https : http)['request'](options, (proxyRes) => {

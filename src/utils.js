@@ -76,5 +76,5 @@ module.exports = {
   encoding,
   mergeData,
   isApi,
-  getParams,
+  getParams
 }
