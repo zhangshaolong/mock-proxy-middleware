@@ -1,10 +1,10 @@
 const queryString = require('querystring')
 
-const utilsTool = require('./utils')
-
 const http = require('http')
 
 const https = require('https')
+
+const utilsTool = require('./utils')
 
 const encoding = utilsTool.encoding
 
@@ -58,15 +58,18 @@ const doProxy = (request, response, headers, params, method, proxyConfig) => {
   if (proxyConfig.redirect) {
     redirectUrl = proxyConfig.redirect(redirectUrl)
   }
-  headers.host = proxyConfig.host + proxyConfig.port ? (':' + proxyConfig.port) : ''
+  headers.host = proxyConfig.host + (proxyConfig.port ? ':' + proxyConfig.port : '')
   const options = {
     host: proxyConfig.host,
-    port: proxyConfig.port,
     path: redirectUrl,
     method: request.method,
     headers: headers,
-    timeout: 30000,
-    rejectUnauthorized: false
+    timeout: proxyConfig.timeout || 30000,
+    rejectUnauthorized: false,
+    agent: false
+  }
+  if (proxyConfig.port) {
+    options.port = proxyConfig.port
   }
   const proxy = (postData) => {
     let proxyReq = (isHttps ? https : http)['request'](options, (proxyRes) => {

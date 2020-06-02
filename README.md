@@ -20,6 +20,7 @@ app.use(mockMiddleware({
   proxyConfig: {
     host: '12.12.12.12',
     port: 8080,
+    timeout: 30000, // ms, default 3000ms
     redirect: (path) => { // could config rredirect path for remote api
       return path
     },
