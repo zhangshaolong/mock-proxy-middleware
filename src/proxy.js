@@ -53,12 +53,13 @@ const getProxy = (request, proxyConfig) => {
 }
 
 const doProxy = (request, response, headers, params, method, proxyConfig) => {
-  const isHttps = request.protocol === 'https'
+  const isHttps = proxyConfig.isHttps != null ? proxyConfig.isHttps : request.protocol === 'https'
   let redirectUrl = request.url
   if (proxyConfig.redirect) {
     redirectUrl = proxyConfig.redirect(redirectUrl)
   }
   headers.host = proxyConfig.host + (proxyConfig.port ? ':' + proxyConfig.port : '')
+  headers.connection = 'close'
   const options = {
     host: proxyConfig.host,
     path: redirectUrl,

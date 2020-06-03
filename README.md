@@ -20,6 +20,7 @@ app.use(mockMiddleware({
   proxyConfig: {
     host: '12.12.12.12',
     port: 8080,
+    isHttps: false, // 是否以https协议进行转发，代理的时候会根据配置选择协议，这里配置的isHttps优先级最高，如果这里没设置，那么协议和源协议一致
     timeout: 30000, // ms, default 3000ms
     redirect: (path) => { // could config rredirect path for remote api
       return path

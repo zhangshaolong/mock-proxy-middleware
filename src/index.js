@@ -23,6 +23,8 @@ const encoding = utilsTool.encoding
       host: '1.1.1.1',
       port: 8080,
       redirect: (path) => {return path},
+      timeout: 30000,
+      isHttps: false,
       ignorePaths: {
         '/api/get_index_data': 1,
         '/api/user_info': 'aaa.bbb.ccc:8080' // 可以指定其他代理服务
