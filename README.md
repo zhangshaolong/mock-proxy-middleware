@@ -22,6 +22,9 @@ app.use(mockMiddleware({
     port: 8080,
     isHttps: false, // 是否以https协议进行转发，代理的时候会根据配置选择协议，这里配置的isHttps优先级最高，如果这里没设置，那么协议和源协议一致
     timeout: 30000, // ms, default 3000ms
+    headers: { // 可以设置一些header信息到代理服务器
+      cookie: 'xxxx'
+    },
     redirect: (path) => { // could config rredirect path for remote api
       return path
     },

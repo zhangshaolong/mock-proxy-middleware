@@ -60,6 +60,9 @@ const doProxy = (request, response, headers, params, method, proxyConfig) => {
   }
   headers.host = proxyConfig.host + (proxyConfig.port ? ':' + proxyConfig.port : '')
   headers.connection = 'close'
+  if (proxyConfig.headers) {
+    headers = {...headers, ...proxyConfig.headers}
+  }
   const options = {
     host: proxyConfig.host,
     path: redirectUrl,

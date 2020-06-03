@@ -25,6 +25,9 @@ const encoding = utilsTool.encoding
       redirect: (path) => {return path},
       timeout: 30000,
       isHttps: false,
+      headers: {
+        cookie: 'xxx'
+      },
       ignorePaths: {
         '/api/get_index_data': 1,
         '/api/user_info': 'aaa.bbb.ccc:8080' // 可以指定其他代理服务
