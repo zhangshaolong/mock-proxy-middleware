@@ -77,7 +77,7 @@ connect.server({
         return [
             mockMiddleware({
                 type: 'prefix', // prefix or suffix
-                value: ['/api/', '/common-api/'] // string or array like ['/api/', ...],
+                rules: ['/api/', '/common-api/'] // string or array like ['/api/', ...],
                 proxyConfig: { // proxy mode
                     host: '1.1.1.1',
                     port: 8080
@@ -95,7 +95,7 @@ devServer: {
   port: 8888,
   historyApiFallback: true,
   inline: true,
-  setup: function(app) {
+  before: function(app) {
     app.use(mockProxyMiddleware(mockProxyConfig))
   }
 }

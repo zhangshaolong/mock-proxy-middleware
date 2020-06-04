@@ -1,5 +1,3 @@
-const queryString = require('querystring')
-
 const http = require('http')
 
 const https = require('https')
@@ -12,9 +10,13 @@ const proxyReg = /^([^:]+):(\d+)$/
 
 const showProxyLog = (options, method, redirectUrl, data) => {
   if (data.length > 2000) {
-    console.log(`proxy request: \n\tHost:${options.host}\n\tPort:${options.port}\n\tMethod:${method}\n\tPath:${redirectUrl}\n\tParams:too large not display`)
+    console.log(
+      `proxy request: \n\tHost:${options.host}\n\tPort:${options.port}\n\tMethod:${method}\n\tPath:${redirectUrl}\n\tParams:too large not display`
+    )
   } else {
-    console.log(`proxy request: \n\tHost:${options.host}\n\tPort:${options.port}\n\tMethod:${method}\n\tPath:${redirectUrl}\n\tParams:${data}`)
+    console.log(
+      `proxy request: \n\tHost:${options.host}\n\tPort:${options.port}\n\tMethod:${method}\n\tPath:${redirectUrl}\n\tParams:${data}`
+    )
   }
 }
 
@@ -61,7 +63,7 @@ const doProxy = (request, response, headers, params, method, proxyConfig) => {
   headers.host = proxyConfig.host + (proxyConfig.port ? ':' + proxyConfig.port : '')
   headers.connection = 'close'
   if (proxyConfig.headers) {
-    headers = {...headers, ...proxyConfig.headers}
+    headers = { ...headers, ...proxyConfig.headers }
   }
   const options = {
     host: proxyConfig.host,
@@ -80,10 +82,12 @@ const doProxy = (request, response, headers, params, method, proxyConfig) => {
       proxyResponse(proxyRes, response, encoding)
     })
     proxyReq.on('error', (e) => {
-      response.end(JSON.stringify({
-        status: 500,
-        e: e.message
-      }))
+      response.end(
+        JSON.stringify({
+          status: 500,
+          e: e.message
+        })
+      )
       console.log('proxyReq error: ' + e.message)
     })
     proxyReq.end(postData, encoding)

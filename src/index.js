@@ -5,8 +5,6 @@
 
 'use strict'
 
-const queryString = require('querystring')
-
 const utilsTool = require('./utils')
 
 const proxyTool = require('./proxy')
@@ -50,12 +48,9 @@ module.exports = (opts) => {
       for (let key in req.headers) {
         headers[key] = req.headers[key]
       }
-      utilsTool.getParams(req, method, isFormData).then((params) => {
-        let proxyConfig = proxyTool.getProxy(req, opts.proxyConfig)
+      let proxyConfig = proxyTool.getProxy(req, opts.proxyConfig)
+      utilsTool.getParams(req, method, isFormData, proxyConfig).then((params) => {
         if (proxyConfig) {
-        	if (method === 'GET') {
-        		params = JSON.stringify(params)
-        	}
           proxyTool.doProxy(req, res, headers, params, method, proxyConfig)
         } else {
           mockTool.doMock(req, res, params, opts)

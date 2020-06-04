@@ -11,24 +11,30 @@ const cachedApis = {}
 const slashReg = /^\/|\/$/g
 
 const doMock = (request, response, params, options) => {
-  let mockPath = options.mockConfig && options.mockConfig.path || 'mock'
+  let mockPath = (options.mockConfig && options.mockConfig.path) || 'mock'
   let pathName = request.path
   try {
-    if (params.__url__) {
+    if (params.__url__) { // 这个是为了支持restful接口定义的格式，需要与api工具配合，后续可以改造到自定义headers
       pathName = params.__url__
       delete params.__url__
     }
     let rules = options.rules
     let len = rules.length
+    let action = options.type === 'prefix' ? 'startsWith' : 'endsWith'
     for (let i = 0; i < len; i++) {
-      if (pathName[options.type === 'prefix' ? 'startsWith' : 'endsWith'](rules[i])) {
-        pathName = pathName.replace(rules[i], '')
+      let rule = rules[i]
+      if (pathName[action](rule)) {
+        pathName = pathName.replace(rule, '')
         const parts = pathName.replace(slashReg, '').split(/\//)
-        pathName = path.resolve(mockPath, rules[i].replace(slashReg, '').replace(/\//g, '_'), parts.join('_'))
+        pathName = path.resolve(
+          mockPath,
+          rule.replace(slashReg, '').replace(/\//g, '_'),
+          parts.join('_')
+        )
         break
       }
     }
-    pathName += options.mockConfig && options.mockConfig.ext || '.js'
+    pathName += (options.mockConfig && options.mockConfig.ext) || '.js'
     fs.exists(pathName, (exist) => {
       if (exist) {
         let mtime = fs.statSync(pathName).mtime.getTime()
@@ -63,7 +69,7 @@ const doMock = (request, response, params, options) => {
         if (typeof result === 'function') {
           result = result(params)
         }
-        response.writeHead(200, {'Content-Type': 'text/plain;charset=' + encoding})
+        response.writeHead(200, { 'Content-Type': 'text/plain;charset=' + encoding })
         if (!isNaN(result.sleep)) {
           setTimeout(() => {
             try {
@@ -71,11 +77,14 @@ const doMock = (request, response, params, options) => {
               delete copy.sleep
               response.end(JSON.stringify(copy), encoding)
             } catch (e) {
-              response.end(JSON.stringify({
-                code: 500,
-                url: reqUrl,
-                e: e
-              }), encoding)
+              response.end(
+                JSON.stringify({
+                  code: 500,
+                  url: reqUrl,
+                  e: e
+                }),
+                encoding
+              )
             }
           }, result.sleep)
         } else {
