@@ -5,6 +5,8 @@
 
 'use strict'
 
+const URL = require('url')
+
 const utilsTool = require('./utils')
 
 const proxyTool = require('./proxy')
@@ -40,7 +42,8 @@ const encoding = utilsTool.encoding
 
 module.exports = (opts) => {
   return (req, res, next) => {
-    if (utilsTool.isApi(req, opts)) {
+    const urlInfo = URL.parse(req.url, true)
+    if (utilsTool.isApi(urlInfo.pathname, opts)) {
       const contentType = req.headers['content-type'] || 'text/plain;charset=' + encoding
       const isFormData = contentType.indexOf('application/x-www-form-urlencoded') > -1
       const method = req.method.toUpperCase()
@@ -49,11 +52,11 @@ module.exports = (opts) => {
         headers[key] = req.headers[key]
       }
       let proxyConfig = proxyTool.getProxy(req, opts.proxyConfig)
-      utilsTool.getParams(req, method, isFormData, proxyConfig).then((params) => {
+      utilsTool.getParams(req, urlInfo.query, method, isFormData, proxyConfig).then((params) => {
         if (proxyConfig) {
           proxyTool.doProxy(req, res, headers, params, method, proxyConfig)
         } else {
-          mockTool.doMock(req, res, params, opts)
+          mockTool.doMock(urlInfo.pathname, res, params, opts)
         }
       })
     } else {

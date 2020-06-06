@@ -90,7 +90,11 @@ const doProxy = (request, response, headers, params, method, proxyConfig) => {
       )
       console.log('proxyReq error: ' + e.message)
     })
-    proxyReq.end(postData, encoding)
+    if (method === 'POST') {
+      proxyReq.end(postData, encoding)
+    } else {
+      request.pipe(proxyReq)
+    }
   }
   showProxyLog(proxyConfig, method, redirectUrl, params)
   proxy(params)

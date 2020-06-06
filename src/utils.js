@@ -34,8 +34,7 @@ const mergeData = (original) => {
   })
 }
 
-const isApi = (request, opt) => {
-  const path = request.path
+const isApi = (pathName, opt) => {
   const type = opt.type
   const rules = opt.rules
   if (typeof rules === 'string') {
@@ -44,13 +43,13 @@ const isApi = (request, opt) => {
   const len = rules.length
   if (type === 'prefix') {
     for (let i = 0; i < len; i++) {
-      if (path.startsWith(rules[i])) {
+      if (pathName.startsWith(rules[i])) {
         return true
       }
     }
   } else if (type === 'suffix') {
     for (let i = 0; i < len; i++) {
-      if (path.endsWith(rules[i])) {
+      if (pathName.endsWith(rules[i])) {
         return true
       }
     }
@@ -58,7 +57,7 @@ const isApi = (request, opt) => {
   return false
 }
 
-const getParams = (request, method, isFormData, isProxy) => {
+const getParams = (request, query, method, isFormData, isProxy) => {
   if (method === 'POST') {
     let bodyData = request.body
     if (bodyData) {
@@ -72,7 +71,7 @@ const getParams = (request, method, isFormData, isProxy) => {
       })
     }
   } else if (method === 'GET') {
-    return Promise.resolve(isProxy ? JSON.stringify(request.query) : request.query)
+    return Promise.resolve(isProxy ? JSON.stringify(query) : query)
   }
 }
 

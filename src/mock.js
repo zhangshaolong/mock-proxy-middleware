@@ -10,9 +10,8 @@ const cachedApis = {}
 
 const slashReg = /^\/|\/$/g
 
-const doMock = (request, response, params, options) => {
+const doMock = (pathName, response, params, options) => {
   let mockPath = (options.mockConfig && options.mockConfig.path) || 'mock'
-  let pathName = request.path
   try {
     if (params.__url__) { // 这个是为了支持restful接口定义的格式，需要与api工具配合，后续可以改造到自定义headers
       pathName = params.__url__
