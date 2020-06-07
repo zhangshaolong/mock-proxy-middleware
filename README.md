@@ -64,6 +64,18 @@ or
     }
 }
 ```
+if you want to cache mock status by context, you can do it like this:
+```javascript
+let times = 0
+return function (params) { // this 'return' is required
+  return {
+    code: xxx,
+    data: {
+      times: times++ // this can cache prev value
+    }
+  }
+}
+```
 for example another, a api like '/api/a/b/c', you can define a js file at
 ${project}/mock/api/a_b_c.js
 if you use gulp-connect server, you can use it like here:
@@ -97,18 +109,6 @@ devServer: {
   inline: true,
   before: function(app) {
     app.use(mockProxyMiddleware(mockProxyConfig))
-  }
-}
-```
-if you want to cache mock status by prev request, you can do it like this:
-```javascript
-let times = 0
-return function () {
-  return {
-    code: xxx,
-    data: {
-      times: times++ // this can cache prev value
-    }
   }
 }
 ```
