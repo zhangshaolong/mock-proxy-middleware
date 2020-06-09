@@ -13,6 +13,8 @@ const proxyTool = require('./proxy')
 
 const mockTool = require('./mock')
 
+const generateApi = require('./manage/generate-api')
+
 const encoding = utilsTool.encoding
 
 /**
@@ -39,8 +41,14 @@ const encoding = utilsTool.encoding
     }
   }
 */
-
+const allConfigs = []
+const timer = null
 module.exports = (opts) => {
+  allConfigs.push(opts)
+  clearTimeout(timer)
+  timer = setTimeout(() => {
+    generateApi(allConfigs)
+  }, 500)
   return (req, res, next) => {
     const urlInfo = URL.parse(req.url, true)
     if (utilsTool.isApi(urlInfo.pathname, opts)) {
