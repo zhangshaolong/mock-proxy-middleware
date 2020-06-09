@@ -42,7 +42,7 @@ const encoding = utilsTool.encoding
   }
 */
 const allConfigs = []
-const timer = null
+let timer = null
 module.exports = (opts) => {
   allConfigs.push(opts)
   clearTimeout(timer)
