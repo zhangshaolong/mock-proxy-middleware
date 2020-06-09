@@ -7,6 +7,10 @@
 
 const URL = require('url')
 
+const fs = require('fs')
+
+const path = require('path')
+
 const utilsTool = require('./utils')
 
 const proxyTool = require('./proxy')
@@ -67,6 +71,8 @@ module.exports = (opts) => {
           mockTool.doMock(urlInfo.pathname, res, params, opts)
         }
       })
+    } else if (urlInfo.pathname === '/show-apis') {
+      res.end(fs.readFileSync(path.resolve(__dirname, './manage/index.html'))) 
     } else {
       return next()
     }
