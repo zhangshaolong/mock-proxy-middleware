@@ -72,7 +72,7 @@ module.exports = (opts) => {
         }
       })
     } else if (urlInfo.pathname === '/show-apis') {
-      res.end(fs.readFileSync(path.resolve(__dirname, './manage/index.html'))) 
+      res.end(fs.readFileSync(path.resolve(__dirname, './manage/show-apis.html'))) 
     } else {
       return next()
     }

@@ -1,6 +1,6 @@
 {
   "name": "mock-proxy-middleware",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "local server mock and proxy tool",
   "main": "dist/index.js",
   "scripts": {
@@ -24,7 +24,6 @@
   "homepage": "https://github.com/zhangshaolong/mock-proxy-middleware#readme",
   "dependencies": {},
   "devDependencies": {
-    "html-webpack-inline-source-plugin": "0.0.10",
     "html-webpack-plugin": "^4.3.0",
     "service-api": "^0.1.3",
     "simplite": "0.0.2",

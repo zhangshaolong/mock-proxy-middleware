@@ -2,7 +2,6 @@ const path = require('path')
 const fs = require('fs')
 const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin')
 
 const parseMeta = (data) => {
   const meta = {
@@ -87,6 +86,7 @@ module.exports = (configs) => {
   })
 
   webpack({
+    mode: 'production',
     entry: {
       main: path.resolve(__dirname, './index.js')
     },
@@ -106,12 +106,10 @@ module.exports = (configs) => {
     },
     plugins: [
       new HtmlWebpackPlugin({
-        inject: true,
+        inject: false,
         template: path.resolve(__dirname, './index.tpl'),
-        templateParameters: projects,
-        inlineSource: '.js$'
-      }),
-      new HtmlWebpackInlineSourcePlugin()
+        templateParameters: projects
+      })
     ],
     module: {
       rules: [
@@ -123,7 +121,13 @@ module.exports = (configs) => {
         }
       ]
     },
-  }, (err) => {
-    console.log(err)
+  }, (err, stats) => {
+    if (!err) {
+      let jsContent = stats.compilation.assets['main.js']._value
+      let htmlContent = stats.compilation.assets['index.html'].source().replace('</body>', `<script>${jsContent}</script></body>`)
+      fs.writeFileSync(path.resolve(__dirname, './show-apis.html'), htmlContent)
+    } else {
+      console.log(err)
+    }
   })
 }

@@ -59,7 +59,7 @@ window.onload = () => {
         if (paramsTextarea) {
           params = paramsTextarea.value.trim()
           if (params) {
-            if (/^\{/.test(params)) {
+            if (/^\s*\{/.test(params)) {
               try {
                 params = Function('return ' + params)()
               } catch (e) {}
@@ -76,7 +76,7 @@ window.onload = () => {
         if (headersTextarea) {
           headers = headersTextarea.value.trim()
           if (headers) {
-            if (/^\{/.test(headers)) {
+            if (/^\s*\{/.test(headers)) {
               try {
                 headers = Function('return ' + headers)()
               } catch (e) {}
