@@ -2,6 +2,7 @@ const path = require('path')
 const fs = require('fs')
 const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin')
 
 const parseMeta = (data) => {
   const meta = {
@@ -107,8 +108,10 @@ module.exports = (configs) => {
       new HtmlWebpackPlugin({
         inject: true,
         template: path.resolve(__dirname, './index.tpl'),
-        templateParameters: projects
-      })
+        templateParameters: projects,
+        inlineSource: '.js$'
+      }),
+      new HtmlWebpackInlineSourcePlugin()
     ],
     module: {
       rules: [
@@ -120,5 +123,7 @@ module.exports = (configs) => {
         }
       ]
     },
+  }, (err) => {
+    console.log(err)
   })
 }
