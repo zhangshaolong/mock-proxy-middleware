@@ -1,6 +1,6 @@
 {
   "name": "mock-proxy-middleware",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "local server mock and proxy tool",
   "main": "dist/index.js",
   "scripts": {
@@ -22,14 +22,15 @@
     "url": "https://github.com/zhangshaolong/mock-proxy-middleware/issues"
   },
   "homepage": "https://github.com/zhangshaolong/mock-proxy-middleware#readme",
-  "dependencies": {},
-  "devDependencies": {
+  "dependencies": {
     "html-webpack-plugin": "^4.3.0",
     "service-api": "^0.1.3",
     "simplite": "0.0.2",
     "simplite-loader": "0.0.3",
+    "webpack": "^4.43.0"
+  },
+  "devDependencies": {
     "uglify-es": "^3.3.9",
-    "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11"
   }
 }
