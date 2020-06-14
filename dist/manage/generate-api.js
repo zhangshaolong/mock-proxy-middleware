@@ -3,42 +3,52 @@ const fs = require('fs')
 const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 
+const metaReg = /^\s*\/\*([\s\S]*?)\*\//m
+const docKeyReg = /^[\s\*]*@(path|method|params|desc|type|headers)\s*([\s\S]+)$/gi
+const descReg = /^\s*((["'])([^\2]+)\2|([^\s]+))\s*:\s*((['"])[^\6]+\6|[\s\S]*\/\/([^$]+))$/
+
+
 const parseMeta = (data) => {
   const meta = {
     method: 'get',
     type: 'json'
   }
-  let dt = data.replace(/^\s*(?:\<meta\>([\s\S]*?)<\/meta\>\s*)?/im, function (all, content) {
-    if (!content) return ''
-    let lines = content.split(/\n/)
-    let paramsMap = {}
-    let hasParamMap = false
-    lines.forEach((line) => {
-      line.replace(/^\s*@(path|method|params|desc|type|headers)\s*([\s\S]+)$/gi, (str, type, val) => {
-        if (type === 'params') {
-          if (/^\.([^\s]+)/.test(val)) {
-            let key = RegExp.$1
-            let columns = val.replace(/^\.([^\s]+)/, '').split(/\s*,\s*/)
-            if (columns.length > 3) {
-              columns[2] = columns.slice(2).join(',')
-              columns.length = 3
+  let dt = data
+  let matched = true
+  while (matched) {
+    matched = false
+    dt = dt.replace(metaReg, (all, contents) => {
+      matched = true
+      let lines = contents.split(/\n/)
+      let paramsMap = {}
+      let hasParamMap = false
+      lines.forEach((line) => {
+        line.replace(docKeyReg, (str, type, val) => {
+          if (type === 'params') {
+            if (/^\.([^\s]+)/.test(val)) {
+              let key = RegExp.$1
+              let columns = val.replace(/^\.([^\s]+)/, '').split(/\s*,\s*/)
+              if (columns.length > 3) {
+                columns[2] = columns.slice(2).join(',')
+                columns.length = 3
+              }
+              paramsMap[key] = columns
+              hasParamMap = true
+              return
             }
-            paramsMap[key] = columns
-            hasParamMap = true
-            return
           }
-        }
-        meta[type] = val
+          meta[type] = val
+        })
       })
+      if (hasParamMap) {
+        meta.paramsMap = paramsMap
+      }
+      return ''
     })
-    if (hasParamMap) {
-      meta.paramsMap = paramsMap
-    }
-    return ''
-  })
+  }
   let respDescMap = {}
   dt.split(/\n/).forEach((line) => {
-    if (/^\s*((["'])([^\2]+)\2|([^\s]+))\s*:\s*((['"])[^\6]+\6|[\s\S]*\/\/([^$]+))$/.test(line)) {
+    if (descReg.test(line)) {
       if (RegExp.$7) {
         respDescMap[RegExp.$3 || RegExp.$4] = RegExp.$7
       }

@@ -10,6 +10,10 @@ const cachedApis = {}
 
 const slashReg = /^\/|\/$/g
 
+const metaReg = /^\s*\/\*([\s\S]*?)\*\//m
+
+const isMockDataReg = /^\s*(?:function|\{)/
+
 const doMock = (pathName, response, params, options) => {
   let mockPath = (options.mockConfig && options.mockConfig.path) || 'mock'
   try {
@@ -41,10 +45,17 @@ const doMock = (pathName, response, params, options) => {
         if (!cachedApi || cachedApi.mtime !== mtime) {
           try {
             let content = new String(fs.readFileSync(pathName, encoding), encoding).trim()
-            // 支持在mock配置一些描述信息，实现对API生成接口文档
-            content = content.replace(/^\s*(?:\<meta\>[\s\S]*?<\/meta\>\s*)?/im, '')
-            if (/^\s*(?:function|\{)/.test(content)) {
-              content = 'return ' + content
+            // 支持在mock配置一些描述信息，实现对API生成接口文档            
+            let matched = true
+            while (matched) {
+              matched = false
+              content = content.replace(metaReg, (all, contents) => {
+                matched = true
+                return ''
+              })
+            }
+            if (isMockDataReg.test(content)) {
+              content = 'return (' + content + ')'
             }
             let result = Function(content)()
             cachedApis[pathName] = cachedApi = {
