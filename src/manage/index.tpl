@@ -260,5 +260,6 @@
     }
     %>
     <pre id="result" class="hide"></pre>
+    <script src="./main.js"></script>
   </body>
 </html>

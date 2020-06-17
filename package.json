@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "uglifyjs src/index.js -o dist/index.js -c & (uglifyjs src/utils.js -o dist/utils.js -c) & (uglifyjs src/mock.js -o dist/mock.js -c) & (uglifyjs src/proxy.js -o dist/proxy.js -c) & (cp -r src/manage dist/)"
+    "build": "uglifyjs src/index.js -o dist/index.js -c & (uglifyjs src/utils.js -o dist/utils.js -c) & (uglifyjs src/mock.js -o dist/mock.js -c) & (uglifyjs src/proxy.js -o dist/proxy.js -c) & (uglifyjs src/apis-doc.js -o dist/apis-doc.js -c) & (node src/manage/main.js)"
   },
   "repository": {
     "type": "git",
@@ -22,13 +22,12 @@
     "url": "https://github.com/zhangshaolong/mock-proxy-middleware/issues"
   },
   "homepage": "https://github.com/zhangshaolong/mock-proxy-middleware#readme",
-  "dependencies": {
+  "devDependencies": {
+    "webpack": "^4.43.0",
+    "uglify-es": "^3.3.9",
+    "webpack-cli": "^3.3.11",
     "service-api": "^0.1.3",
     "simplite": "0.0.2",
     "simplite-loader": "0.0.3"
-  },
-  "devDependencies": {
-    "uglify-es": "^3.3.9",
-    "webpack-cli": "^3.3.11"
   }
 }

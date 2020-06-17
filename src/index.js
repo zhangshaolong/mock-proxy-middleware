@@ -17,7 +17,7 @@ const proxyTool = require('./proxy')
 
 const mockTool = require('./mock')
 
-const generateApi = require('./manage/generate-api')
+const apisDoc = require('./apis-doc')
 
 const encoding = utilsTool.encoding
 
@@ -47,11 +47,12 @@ const encoding = utilsTool.encoding
 */
 const allConfigs = []
 let timer = null
+let projects = []
 module.exports = (opts) => {
   allConfigs.push(opts)
   clearTimeout(timer)
   timer = setTimeout(() => {
-    generateApi(allConfigs)
+    projects = apisDoc(allConfigs)
   }, 500)
   return (req, res, next) => {
     const urlInfo = URL.parse(req.url, true)
@@ -72,7 +73,7 @@ module.exports = (opts) => {
         }
       })
     } else if (urlInfo.pathname === '/show-apis') {
-      res.end(fs.readFileSync(path.resolve(__dirname, './manage/show-apis.html'))) 
+      res.end(require('./render')(projects))
     } else {
       return next()
     }

@@ -1,13 +1,8 @@
 const path = require('path')
 const fs = require('fs')
-const webpack = require('webpack')
-const HtmlWebpackPlugin = require('html-webpack-plugin')
-
 const metaReg = /^\s*\/\*([\s\S]*?)\*\//m
 const docKeyReg = /^[\s\*]*@(path|method|params|desc|type|headers)\s*([\s\S]+)$/gi
 const descReg = /^\s*((["'])([^\2]+)\2|([^\s]+))\s*:\s*((['"])[^\6]+\6|[\s\S]*\/\/([^$]+))$/
-
-
 const parseMeta = (data) => {
   const meta = {
     method: 'get',
@@ -92,52 +87,6 @@ module.exports = (configs) => {
         rules
       })
     }
-    
   })
-
-  webpack({
-    mode: 'production',
-    entry: {
-      main: path.resolve(__dirname, './index.js')
-    },
-    output: {
-      path: path.resolve(__dirname, './')
-    },
-    module: {
-      rules: [
-        {
-          test: /\.tpl$/,
-          exclude: /node_modules/,
-          use: {
-            loader: 'simplite-loader'
-          }
-        }
-      ]
-    },
-    plugins: [
-      new HtmlWebpackPlugin({
-        inject: false,
-        template: path.resolve(__dirname, './index.tpl'),
-        templateParameters: projects
-      })
-    ],
-    module: {
-      rules: [
-        {
-          test: /\.tpl$/,
-          use: {
-            loader: 'simplite-loader'
-          }
-        }
-      ]
-    },
-  }, (err, stats) => {
-    if (!err) {
-      let jsContent = stats.compilation.assets['main.js']._value
-      let htmlContent = stats.compilation.assets['index.html'].source().replace('</body>', `<script>${jsContent}</script></body>`)
-      fs.writeFileSync(path.resolve(__dirname, './show-apis.html'), htmlContent)
-    } else {
-      console.log(err)
-    }
-  })
+  return projects
 }
