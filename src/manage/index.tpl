@@ -260,6 +260,6 @@
     }
     %>
     <pre id="result" class="hide"></pre>
-    <script src="./main.js"></script>
+    <script>{{_this.__main__}}</script>
   </body>
 </html>

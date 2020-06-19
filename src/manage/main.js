@@ -7,16 +7,15 @@ webpack({
     mode: 'production',
     entry: {
       main: path.resolve(__dirname, './index.js')
-    },
-    output: {
-      path: path.resolve(__dirname, '../../dist/')
     }
   }, (err, stats) => {
     if (!err) {
       const template = fs.readFileSync(path.resolve(__dirname, './index.tpl'), 'utf8')
       const code = Simplite.toCodeBlock(template)
+      let jsContent = stats.compilation.assets['main.js']._value
       const render = `
         module.exports = (data) => {
+          data.__main__ = ${JSON.stringify(jsContent)}
           return Function('_this',${JSON.stringify(code)}).call({defaultAttr:v=>v},data);
         }
       `
