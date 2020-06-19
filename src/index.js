@@ -17,8 +17,6 @@ const proxyTool = require('./proxy')
 
 const mockTool = require('./mock')
 
-const apisDoc = require('./apis-doc')
-
 const encoding = utilsTool.encoding
 
 /**
@@ -52,7 +50,7 @@ module.exports = (opts) => {
   allConfigs.push(opts)
   clearTimeout(timer)
   timer = setTimeout(() => {
-    projects = apisDoc(allConfigs)
+    projects = utilsTool.getApiDocData(allConfigs)
   }, 500)
   return (req, res, next) => {
     const urlInfo = URL.parse(req.url, true)

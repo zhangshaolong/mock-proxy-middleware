@@ -7,7 +7,8 @@ webpack({
     mode: 'production',
     entry: {
       main: path.resolve(__dirname, './index.js')
-    }
+    },
+    output: {}
   }, (err, stats) => {
     if (!err) {
       const template = fs.readFileSync(path.resolve(__dirname, './index.tpl'), 'utf8')
@@ -20,6 +21,7 @@ webpack({
         }
       `
       fs.writeFileSync(path.resolve(__dirname, '../../dist/render.js'), render)
+      fs.unlinkSync(path.resolve(__dirname, '../../dist/main.js'))
     } else {
       console.log(err)
     }
