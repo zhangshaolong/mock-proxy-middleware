@@ -95,7 +95,7 @@ window.onload = () => {
           resultNode.style.marginLeft = -resultNode.clientWidth / 2 + 'px'
           resultNode.style.marginTop = -resultNode.clientHeight / 2 + 'px'
           resultNode.querySelectorAll('.json-object-key').forEach((keyNode) => {
-            let desc = respDescMap[keyNode.innerHTML.trim()]
+            let desc = respDescMap[keyNode.innerHTML.replace(/^"|"$/g, '')]
             if (desc) {
               let qtNode = keyNode.nextElementSibling.nextSibling
               if (qtNode) {
