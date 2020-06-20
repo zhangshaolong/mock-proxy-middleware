@@ -15,8 +15,7 @@ if you use express server, you can use it like here:
 var app = express()
 
 app.use(mockMiddleware({
-  type: 'prefix', // prefix or suffix
-  rules: ['/api/', '/common-api/'], // string or array like ['/api/', ...]
+  rules: ['^/api/', '^/common-api/'], // 字符串规则和正则规则
   proxyConfig: {
     host: '12.12.12.12',
     port: 8080,
@@ -28,10 +27,10 @@ app.use(mockMiddleware({
     redirect: (path) => { // could config rredirect path for remote api
       return path
     },
-    ignorePaths: { // when use proxy mode, this apis use local mode
-      '/api/get_index_data': 1,
-      '/api/user_info': 'aaa.bbb.ccc:8080' // you can set other host and port for muti porxy mode
-    }
+    excludes: [ // when use proxy mode, this apis use local mode
+      '^/api/get_index_data/', // string
+      /^\/api\/user_info/ // regexp
+    ]
   },
   mockConfig: {
     path: 'mock', // project`s mock dir name， default 'mock'
@@ -88,8 +87,7 @@ connect.server({
     middleware: function(connect, opt) {
         return [
             mockMiddleware({
-                type: 'prefix', // prefix or suffix
-                rules: ['/api/', '/common-api/'] // string or array like ['/api/', ...],
+                rules: ['^/api/', /^\/common-api\//] // string or regexp like ['^/api/', ...],
                 proxyConfig: { // proxy mode
                     host: '1.1.1.1',
                     port: 8080

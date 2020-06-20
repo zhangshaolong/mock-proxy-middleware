@@ -17,23 +17,22 @@ const isMockDataReg = /^\s*(?:function|\{)/
 const doMock = (pathName, response, params, options) => {
   let mockPath = (options.mockConfig && options.mockConfig.path) || 'mock'
   try {
-    if (params.__url__) { // 这个是为了支持restful接口定义的格式，需要与api工具配合，后续可以改造到自定义headers
-      pathName = params.__url__
-      delete params.__url__
-    }
     let rules = options.rules
     let len = rules.length
-    let action = options.type === 'prefix' ? 'startsWith' : 'endsWith'
     for (let i = 0; i < len; i++) {
-      let rule = rules[i]
-      if (pathName[action](rule)) {
-        pathName = pathName.replace(rule, '')
+      let rule = new RegExp(rules[i])
+      let isApi = false
+      pathName.replace(rule, (match) => {
+        pathName = pathName.replace(match, '_').replace(/^_|_$/, '')
         const parts = pathName.replace(slashReg, '').split(/\//)
         pathName = path.resolve(
           mockPath,
-          rule.replace(slashReg, '').replace(/\//g, '_'),
+          match.replace(slashReg, '').replace(/\//g, '_'),
           parts.join('_')
         )
+        isApi = true
+      })
+      if (isApi) {
         break
       }
     }
@@ -109,13 +108,8 @@ const doMock = (pathName, response, params, options) => {
       }
     })
   } catch (e) {
-    try {
-      result = JSON.parse(result)
-      response.end(result)
-    } catch (e) {
-      response.writeHead(500)
-      response.end(JSON.stringify(e.message))
-    }
+    response.writeHead(500)
+    response.end(JSON.stringify(e.message))
   }
 }
 

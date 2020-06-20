@@ -40,15 +40,16 @@ const proxyResponse = (proxyRes, res) => {
 
 const getProxy = (request, proxyConfig) => {
   if (proxyConfig) {
-    if (proxyConfig.host && !(proxyConfig.ignorePaths && proxyConfig.ignorePaths[request.path])) {
-      return proxyConfig
-    }
-    if (proxyConfig.ignorePaths && proxyReg.test(proxyConfig.ignorePaths[request.path])) {
-      return {
-        ...proxyConfig,
-        host: RegExp.$1,
-        port: RegExp.$2 || ''
+    if (proxyConfig.host) {
+      const excludes = proxyConfig.excludes
+      if (excludes) {
+        for (let i = 0; i < excludes.length; i++) {
+          if (new RegExp(excludes[i]).test(request.path)) {
+            return false
+          }
+        }
       }
+      return proxyConfig
     }
   }
   return false

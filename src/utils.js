@@ -41,23 +41,13 @@ const mergeData = (original) => {
 }
 
 const isApi = (pathName, opt) => {
-  const type = opt.type
   const rules = opt.rules
-  if (typeof rules === 'string') {
+  if (!Array.isArray(rules)) {
     rules = [rules]
   }
-  const len = rules.length
-  if (type === 'prefix') {
-    for (let i = 0; i < len; i++) {
-      if (pathName.startsWith(rules[i])) {
-        return true
-      }
-    }
-  } else if (type === 'suffix') {
-    for (let i = 0; i < len; i++) {
-      if (pathName.endsWith(rules[i])) {
-        return true
-      }
+  for (let i = 0; i < rules.length; i++) {
+    if (new RegExp(rules[i]).test(pathName)) {
+      return true
     }
   }
   return false

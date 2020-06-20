@@ -21,8 +21,7 @@ const encoding = utilsTool.encoding
 
 /**
   opts = {
-    type: 'prefix', // prefix or suffix
-    rules: ['/api/', '/common-api/'] // or array like ['/api/', '/api-prefix/']
+    rules: [/^\/api\//, /^\/common-api\//]
     proxyConfig: {
       host: '1.1.1.1',
       port: 8080,
@@ -32,10 +31,11 @@ const encoding = utilsTool.encoding
       headers: {
         cookie: 'xxx'
       },
-      ignorePaths: {
-        '/api/get_index_data': 1,
-        '/api/user_info': 'aaa.bbb.ccc:8080' // 可以指定其他代理服务
-      }
+      excludes: [
+        '^/api/get_index_data',
+        '^/api/user_info',
+        /^\/test-api\/mock\//
+      ]
     },
     mockConfig: {
       path: 'mock', // default dir is 'mock' under project`s path
