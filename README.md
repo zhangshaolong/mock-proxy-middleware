@@ -110,4 +110,6 @@ devServer: {
   }
 }
 ```
+if you look at all of apis at this project, input 'https?:{host}/show-apis', need has mock file and meta about api description
+
 scaffold is a demo project with mock proxy tool [scaffold](https://github.com/zhangshaolong/scaffold "scaffold lib")
