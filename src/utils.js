@@ -143,7 +143,7 @@ const getApiDocData = (configs) => {
         if (rule.constructor === RegExp) {
           rule = rule.source
         }
-        rule = rule.replace(/^\^|\$$/g, '').replace(/\//g, '_').replace(/^_|_$/g, '')
+        rule = rule.replace(/^\^|\$$/g, '').replace(/\\?\//g, '_').replace(/^_|_$/g, '')
         let apis = findAPIs(path.resolve(mockPath, rule))
         modules.push({
           rule,
