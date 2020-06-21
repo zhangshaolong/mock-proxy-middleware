@@ -8,8 +8,6 @@ const descReg = /^\s*((["'])([^\2]+)\2|([^\s]+))\s*:\s*((['"])[^\6]+\6|[\s\S]*\/
 
 const encoding = 'UTF-8'
 
-const addedPathes = {}
-
 const mergeData = (original) => {
   return new Promise((resolve) => {
     let chunks = []
@@ -151,15 +149,15 @@ const getApiDocData = (configs) => {
     let mockConfig = config.mockConfig
     if (mockConfig) {
       let mockPath = mockConfig.path
-      let hasAdded = addedPathes[mockPath]
-      if (!hasAdded) {
-        let rules = findAPIs(path.resolve(mockPath))
+      let rules = [].concat(config.rules)
+      rules.forEach((rule) => {
+        rule = new RegExp(rule).source.replace(/\//g, '_').replace(/^_|_$/, '')
+        let rules = findAPIs(path.resolve(mockPath, rule))
         projects.push({
-          path: '',
+          path: rule,
           rules
         })
-        addedPathes[mockPath] = true
-      }
+      })
     }
   })
   return projects

@@ -25,15 +25,11 @@ window.onload = () => {
   let metaMap = {}
   let resultNode = document.getElementById('result')
   mockData.forEach((mockConfig) => {
-    let project = mockConfig.path
-    let rules = mockConfig.rules
-    rules.forEach((ruleConfig) => {
-      let prefix = ruleConfig.name
-      let apis = ruleConfig.apis
-      apis.forEach((apiConfig) => {
-        let path = apiConfig.path
-        metaMap[project + prefix + path] = apiConfig
-      })
+    let mod = mockConfig.rule
+    let apis = mockConfig.apis
+    apis.forEach((apiConfig) => {
+      let path = apiConfig.path
+      metaMap[mod + path] = apiConfig
     })
   })
   document.querySelectorAll('.folder').forEach((ele) => {

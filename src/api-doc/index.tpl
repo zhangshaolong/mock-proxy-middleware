@@ -135,129 +135,116 @@
     </script>
   </head>
   <body>
-    <center style="font-size: 18px; font-weight: bold; margin-bottom: 20px;">API接口列表</center>
+    <center style="font-size: 18px; font-weight: bold; margin-bottom: 20px;">API接口集</center>
     <%
       for (let p = 0; p < _this.length; p++) {
-        let project = _this[p].path && _this[p].path.split('/').pop();
-        let rules = _this[p].rules;
+        let module = _this[p].rule;
+        let apis = _this[p].apis;
     %>
       <div class="folder" style="display: inline-block; vertical-align: top; margin: 10px; padding: 10px; border: 1px solid #eee;">
-        <div style="font-size: 17px; font-weight: bold; margin-bottom: 10px; display: inline-block;">Project: {{ project }}</div>
-    <%
-        for (let i = 0; i < rules.length; i++) {
-          let item = rules[i];
-          let prefix = item.name;
-          let apis = item.apis;
-      
-    %>
-      <div class="folder" style="margin-left: 20px;">
-        <div style="font-size: 16px; font-weight: bold; display: inline-block;">{{ prefix }} </div>
-    <%
-      for (let j = 0; j < apis.length; j++) {
-        let meta = apis[j];
-    %>
-        <div style="border: 1px solid #eee; padding: 5px 10px;">
-          <div style="font-size: 14px; line-height: 30px;"><span class="view" data-id="{{ project + prefix + meta.path}}">Postman</span><a href="{{ meta.path }}" target="_blank">{{ meta.path }}</a></div>
+        <div style="font-size: 17px; font-weight: bold; margin-bottom: 10px; display: inline-block;">Module: {{ module }}</div>
           <%
-            if (meta.desc) {
+            for (let j = 0; j < apis.length; j++) {
+              let meta = apis[j];
           %>
-            <div style="font-size: 12px; line-height: 20px;"><span class="title">Desc</span> {{ meta.desc }}</div>
-          <%
-          }
-          %>
-          <div style="font-size: 12px; line-height: 20px;"><span class="title">Method</span>
+          <div style="border: 1px solid #eee; padding: 5px 10px;">
+            <div style="font-size: 14px; line-height: 30px;"><span class="view" data-id="{{ module + meta.path}}">Postman</span><a href="{{ meta.path }}" target="_blank">{{ meta.path }}</a></div>
             <%
-              if (/get/i.test(meta.method)) {
+              if (meta.desc) {
             %>
-              <label style="margin-right: 10px;">get<input type="radio" name="{{ project + prefix + meta.path}}" value="get" checked></label>
+              <div style="font-size: 12px; line-height: 20px;"><span class="title">Desc</span> {{ meta.desc }}</div>
             <%
-            }
+              }
+            %>
+            <div style="font-size: 12px; line-height: 20px;"><span class="title">Method</span>
+              <%
+                if (/get/i.test(meta.method)) {
+              %>
+                <label style="margin-right: 10px;">get<input type="radio" name="{{ module + meta.path}}" value="get" checked></label>
+              <%
+                }
+              %>
+              <%
+                if (/post/i.test(meta.method)) {
+              %>
+                <label>post<input type="radio" name="{{ module + meta.path}}" value="post" checked></label>
+              <%
+                }
+              %>
+            </div>
+            <%
+              if (meta.type) {
+            %>
+              <div style="font-size: 12px; line-height: 20px;"><span class="title">Type</span>{{ meta.type }}</div>
+            <%
+              }
             %>
             <%
-              if (/post/i.test(meta.method)) {
+              if (meta.params || meta.paramsMap) {
+                let params = meta.params;
+                let paramsMap = meta.paramsMap;
             %>
-              <label>post<input type="radio" name="{{ project + prefix + meta.path}}" value="post" checked></label>
+              <div style="font-size: 12px; line-height: 20px;"><span class="title">Params</span>
+                <%
+                  if (params) {
+                %>
+                <textarea id="{{ module + meta.path }}-textarea">{{ meta.params || '' }}</textarea>
+                <%
+                  }
+                %>
+                <%
+                  if (paramsMap) {
+                %>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>字段</th>
+                      <th>类型</th>
+                      <th>是否必填</th>
+                      <th>描述</th>
+                    </tr>
+                  </thead>
+                  <%
+                    for (let key in paramsMap) {
+                      let cls = paramsMap[key];
+                    %>
+                      <tr>
+                        <td>{{ key }}</td>
+                        <%
+                          cls.forEach((cl) => {
+                        %>
+                          <td>{{ cl }}</td>
+                        <%
+                          })
+                        %>
+                      </tr>
+                    <%
+                      }
+                    %>
+                </table>
+                <%
+                  }
+                %>
+              </div>
             <%
-            }
+              }
+            %>
+            <%
+              if (meta.headers) {
+            %>
+              <div style="font-size: 12px; line-height: 20px;"><span class="title">Headers</span>
+                <textarea id="{{ module + meta.path }}-headers">{{ meta.headers }}</textarea>
+              </div>
+            <%
+              }
             %>
           </div>
-          <%
-            if (meta.type) {
-          %>
-            <div style="font-size: 12px; line-height: 20px;"><span class="title">Type</span>{{ meta.type }}</div>
-          <%
+        <%
           }
-          %>
-          <%
-            if (meta.params || meta.paramsMap) {
-              let params = meta.params;
-              let paramsMap = meta.paramsMap;
-          %>
-            <div style="font-size: 12px; line-height: 20px;"><span class="title">Params</span>
-              <%
-                if (params) {
-              %>
-              <textarea id="{{ project + prefix + meta.path }}-textarea">{{ meta.params || '' }}</textarea>
-              <%
-                }
-              %>
-              <%
-                if (paramsMap) {
-              %>
-              <table>
-                <thead>
-                  <tr>
-                    <th>字段</th>
-                    <th>类型</th>
-                    <th>是否必填</th>
-                    <th>描述</th>
-                  </tr>
-                </thead>
-                <%
-                  for (let key in paramsMap) {
-                    let cls = paramsMap[key];
-                  %>
-                    <tr>
-                      <td>{{ key }}</td>
-                      <%
-                        cls.forEach((cl) => {
-                      %>
-                        <td>{{ cl }}</td>
-                      <%
-                      })
-                      %>
-                    </tr>
-                  <%
-                    }
-                  %>
-              </table>
-              <%
-                }
-              %>
-            </div>
-          <%
-          }
-          %>
-          <%
-            if (meta.headers) {
-          %>
-            <div style="font-size: 12px; line-height: 20px;"><span class="title">Headers</span>
-              <textarea id="{{ project + prefix + meta.path }}-headers">{{ meta.headers }}</textarea>
-            </div>
-          <%
-          }
-          %>
-        </div>
-    <%
-      }
-    %>
+        %>
       </div>
     <%
       }
-    %>
-      </div>
-    <%
-    }
     %>
     <pre id="result" class="hide"></pre>
     <script>{{_this.__main__}}</script>
