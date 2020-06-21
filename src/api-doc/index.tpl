@@ -138,17 +138,17 @@
     <center style="font-size: 18px; font-weight: bold; margin-bottom: 20px;">API接口集</center>
     <%
       for (let p = 0; p < _this.length; p++) {
-        let module = _this[p].rule;
+        let rule = _this[p].rule;
         let apis = _this[p].apis;
     %>
       <div class="folder" style="display: inline-block; vertical-align: top; margin: 10px; padding: 10px; border: 1px solid #eee;">
-        <div style="font-size: 17px; font-weight: bold; margin-bottom: 10px; display: inline-block;">Module: {{ module }}</div>
+        <div style="font-size: 17px; font-weight: bold; margin-bottom: 10px; display: inline-block;">Module: {{ rule }}</div>
           <%
             for (let j = 0; j < apis.length; j++) {
               let meta = apis[j];
           %>
           <div style="border: 1px solid #eee; padding: 5px 10px;">
-            <div style="font-size: 14px; line-height: 30px;"><span class="view" data-id="{{ module + meta.path}}">Postman</span><a href="{{ meta.path }}" target="_blank">{{ meta.path }}</a></div>
+            <div style="font-size: 14px; line-height: 30px;"><span class="view" data-id="{{ rule + meta.path}}">Postman</span><a href="{{ meta.path }}" target="_blank">{{ meta.path }}</a></div>
             <%
               if (meta.desc) {
             %>
@@ -160,14 +160,14 @@
               <%
                 if (/get/i.test(meta.method)) {
               %>
-                <label style="margin-right: 10px;">get<input type="radio" name="{{ module + meta.path}}" value="get" checked></label>
+                <label style="margin-right: 10px;">get<input type="radio" name="{{ rule + meta.path}}" value="get" checked></label>
               <%
                 }
               %>
               <%
                 if (/post/i.test(meta.method)) {
               %>
-                <label>post<input type="radio" name="{{ module + meta.path}}" value="post" checked></label>
+                <label>post<input type="radio" name="{{ rule + meta.path}}" value="post" checked></label>
               <%
                 }
               %>
@@ -188,7 +188,7 @@
                 <%
                   if (params) {
                 %>
-                <textarea id="{{ module + meta.path }}-textarea">{{ meta.params || '' }}</textarea>
+                <textarea id="{{ rule + meta.path }}-textarea">{{ meta.params || '' }}</textarea>
                 <%
                   }
                 %>
@@ -233,7 +233,7 @@
               if (meta.headers) {
             %>
               <div style="font-size: 12px; line-height: 20px;"><span class="title">Headers</span>
-                <textarea id="{{ module + meta.path }}-headers">{{ meta.headers }}</textarea>
+                <textarea id="{{ rule + meta.path }}-headers">{{ meta.headers }}</textarea>
               </div>
             <%
               }
