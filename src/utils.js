@@ -41,10 +41,7 @@ const mergeData = (original) => {
 }
 
 const isApi = (pathName, opt) => {
-  const rules = opt.rules
-  if (!Array.isArray(rules)) {
-    rules = [rules]
-  }
+  const rules = [].concat(opt.rules)
   for (let i = 0; i < rules.length; i++) {
     if (new RegExp(rules[i]).test(pathName)) {
       return true

@@ -10,6 +10,8 @@ const cachedApis = {}
 
 const slashReg = /^\/|\/$/g
 
+const semReg = /\s*;\s*$/m
+
 const metaReg = /^\s*\/\*([\s\S]*?)\*\//m
 
 const isMockDataReg = /^\s*(?:function|\{)/
@@ -17,8 +19,8 @@ const isMockDataReg = /^\s*(?:function|\{)/
 const doMock = (pathName, response, params, options) => {
   let mockPath = (options.mockConfig && options.mockConfig.path) || 'mock'
   try {
-    let rules = options.rules
-    let len = rules.length
+    const rules = [].concat(options.rules)
+    const len = rules.length
     for (let i = 0; i < len; i++) {
       let rule = new RegExp(rules[i])
       let isApi = false
@@ -53,6 +55,7 @@ const doMock = (pathName, response, params, options) => {
                 return ''
               })
             }
+            content = content.replace(semReg, '') // 有的编辑器会自动在最后加上分号
             if (isMockDataReg.test(content)) {
               content = 'return (' + content + ')'
             }
