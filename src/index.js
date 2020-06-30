@@ -67,7 +67,7 @@ module.exports = (opts) => {
         if (proxyConfig) {
           proxyTool.doProxy(req, res, headers, params, method, proxyConfig)
         } else {
-          mockTool.doMock(urlInfo.pathname, res, params, opts)
+          mockTool.doMock(urlInfo.pathname, req, res, params, opts)
         }
       })
     } else if (urlInfo.pathname === '/show-apis') {

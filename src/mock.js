@@ -16,7 +16,7 @@ const metaReg = /^\s*\/\*([\s\S]*?)\*\//m
 
 const isMockDataReg = /^\s*(?:function|\{)/
 
-const doMock = (pathName, response, params, options) => {
+const doMock = (pathName, request, response, params, options) => {
   let mockPath = (options.mockConfig && options.mockConfig.path) || 'mock'
   try {
     const rules = [].concat(options.rules)
@@ -79,7 +79,13 @@ const doMock = (pathName, response, params, options) => {
         }
         let result = cachedApi.result
         if (typeof result === 'function') {
-          result = result(params)
+          result = result(params, {
+            require,
+            request,
+            response,
+            __dirname: path.resolve(pathName, '..'),
+            tools: {} // 后续可以进行mock的功能扩展，比如提供生成range数据等等
+          })
         }
         response.writeHead(200, { 'Content-Type': 'text/plain;charset=' + encoding })
         if (!isNaN(result.sleep)) {

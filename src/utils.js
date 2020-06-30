@@ -120,7 +120,7 @@ const parseMeta = (data) => {
 
 const findAPIs = (pathName) => {
   let apis = []
-  if (fs.statSync(pathName).isDirectory()) {
+  if (fs.existsSync(pathName) && fs.statSync(pathName).isDirectory()) {
     fs.readdirSync(pathName).forEach((api) => {
       let data = fs.readFileSync(path.join(pathName, api), 'utf8')
       apis.push(parseMeta(data))
