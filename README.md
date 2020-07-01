@@ -14,7 +14,7 @@ if you use express server, you can use it like here:
 ```javascript
 var app = express()
 
-app.use(mockMiddleware({
+app.use(mockMiddleware([{
   rules: ['^/api/', '^/common-api/'], // 字符串规则和正则规则
   proxyConfig: {
     host: '12.12.12.12',
@@ -37,7 +37,7 @@ app.use(mockMiddleware({
     ext: '.js'
   }
 
-}));
+}]));
 ```
 for example，a api like '/common-api/get_user_info', you can define a js file at
 ${project}/mock/common-api/get_user_info.js, it`s content like
@@ -86,14 +86,14 @@ connect.server({
     root: ['/'],
     middleware: function(connect, opt) {
         return [
-            mockMiddleware({
+            mockMiddleware([{
                 rules: ['^/api/', /^\/common-api\//] // string or regexp like ['^/api/', ...],
                 proxyConfig: { // proxy mode
                     host: '1.1.1.1',
                     port: 8080
                 },
                 mockConfig: {}
-            })
+            }])
         ];
     }
 });
@@ -106,7 +106,7 @@ devServer: {
   historyApiFallback: true,
   inline: true,
   before: function(app) {
-    app.use(mockProxyMiddleware(mockProxyConfig))
+    app.use(mockProxyMiddleware(mockProxyFilePath)) // if set a path of config, config is immediate effect
   }
 }
 ```

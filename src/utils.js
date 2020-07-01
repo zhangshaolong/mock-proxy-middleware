@@ -40,11 +40,13 @@ const mergeData = (original) => {
   })
 }
 
-const isApi = (pathName, opt) => {
-  const rules = [].concat(opt.rules)
-  for (let i = 0; i < rules.length; i++) {
-    if (new RegExp(rules[i]).test(pathName)) {
-      return true
+const getApiConfig = (pathName, cfgs) => {
+  for (let i = 0; i < cfgs.length; i++) {
+    const rules = [].concat(cfgs[i].rules)
+    for (let j = 0; j < rules.length; j++) {
+      if (new RegExp(rules[j]).test(pathName)) {
+        return cfgs[i]
+      }
     }
   }
   return false
@@ -155,7 +157,7 @@ const getApiDocData = (configs) => {
 module.exports = {
   encoding,
   mergeData,
-  isApi,
+  getApiConfig,
   getParams,
   getApiDocData
 }

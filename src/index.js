@@ -20,7 +20,7 @@ const mockTool = require('./mock')
 const encoding = utilsTool.encoding
 
 /**
-  opts = {
+  cfgs = [{
     rules: [/^\/api\//, /^\/common-api\//]
     proxyConfig: {
       host: '1.1.1.1',
@@ -41,20 +41,24 @@ const encoding = utilsTool.encoding
       path: 'mock', // default dir is 'mock' under project`s path
       ext: '.js'
     }
-  }
+  }]
+  |
+  cfgs = ${dync_config_path}
 */
-const allConfigs = []
-let timer = null
-let projects = []
-module.exports = (opts) => {
-  allConfigs.push(opts)
-  clearTimeout(timer)
-  timer = setTimeout(() => {
-    projects = utilsTool.getApiDocData(allConfigs)
-  }, 500)
+
+module.exports = (cfgs) => {
+  let dyncConfigPath
+  if (typeof cfgs === 'string') {
+    dyncConfigPath = cfgs
+  }
   return (req, res, next) => {
+    if (dyncConfigPath) {
+      delete require.cache[dyncConfigPath]
+      cfgs = require(dyncConfigPath)
+    }
     const urlInfo = URL.parse(req.url, true)
-    if (utilsTool.isApi(urlInfo.pathname, opts)) {
+    const cfg = utilsTool.getApiConfig(urlInfo.pathname, cfgs)
+    if (cfg) {
       const contentType = req.headers['content-type'] || 'text/plain;charset=' + encoding
       const isFormData = contentType.indexOf('application/x-www-form-urlencoded') > -1
       const method = req.method.toUpperCase()
@@ -62,16 +66,16 @@ module.exports = (opts) => {
       for (let key in req.headers) {
         headers[key] = req.headers[key]
       }
-      let proxyConfig = proxyTool.getProxy(req, opts.proxyConfig)
+      let proxyConfig = proxyTool.getProxy(req, cfg.proxyConfig)
       utilsTool.getParams(req, urlInfo.query, method, isFormData, proxyConfig).then((params) => {
         if (proxyConfig) {
           proxyTool.doProxy(req, res, headers, params, method, proxyConfig)
         } else {
-          mockTool.doMock(urlInfo.pathname, req, res, params, opts)
+          mockTool.doMock(urlInfo.pathname, req, res, params, cfg)
         }
       })
     } else if (urlInfo.pathname === '/show-apis') {
-      res.end(require('./render')(projects))
+      res.end(require('./render')(utilsTool.getApiDocData(cfgs)))
     } else {
       return next()
     }
