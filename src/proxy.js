@@ -2,6 +2,8 @@ const http = require('http')
 
 const https = require('https')
 
+const chrome = require('chrome-cookies-secure')
+
 const utilsTool = require('./utils')
 
 const encoding = utilsTool.encoding
@@ -18,6 +20,18 @@ const showProxyLog = (options, method, redirectUrl, data) => {
       `proxy request: \n\tHost:${options.host}\n\tPort:${options.port}\n\tMethod:${method}\n\tPath:${redirectUrl}\n\tParams:${data}`
     )
   }
+}
+
+const getProxyCookies = (isHttps, host) => {
+  return new Promise((resolve) => {
+    try {
+      chrome.getCookies(`http${isHttps? 's' : ''}://${host}`, function(err, cookies) {
+        resolve(cookies)
+      })
+    } catch (e) {
+      resolve({})
+    }
+  })
 }
 
 const proxyResponse = (proxyRes, res) => {
@@ -56,29 +70,7 @@ const getProxy = (request, proxyConfig) => {
 }
 
 const doProxy = (request, response, headers, params, method, proxyConfig) => {
-  const isHttps = proxyConfig.isHttps != null ? proxyConfig.isHttps : request.protocol === 'https'
-  let redirectUrl = request.url
-  if (proxyConfig.redirect) {
-    redirectUrl = proxyConfig.redirect(redirectUrl)
-  }
-  headers.host = proxyConfig.host + (proxyConfig.port ? ':' + proxyConfig.port : '')
-  headers.connection = 'close'
-  if (proxyConfig.headers) {
-    headers = { ...headers, ...proxyConfig.headers }
-  }
-  const options = {
-    host: proxyConfig.host,
-    path: redirectUrl,
-    method: request.method,
-    headers: headers,
-    timeout: proxyConfig.timeout || 30000,
-    rejectUnauthorized: false,
-    agent: false
-  }
-  if (proxyConfig.port) {
-    options.port = proxyConfig.port
-  }
-  const proxy = (postData) => {
+  const proxy = (postData, options) => {
     let proxyReq = (isHttps ? https : http)['request'](options, (proxyRes) => {
       proxyResponse(proxyRes, response, encoding)
     })
@@ -97,8 +89,51 @@ const doProxy = (request, response, headers, params, method, proxyConfig) => {
       request.pipe(proxyReq)
     }
   }
-  showProxyLog(proxyConfig, method, redirectUrl, params)
-  proxy(params)
+
+  const isHttps = proxyConfig.isHttps != null ? proxyConfig.isHttps : request.protocol === 'https'
+  let redirectUrl = request.url
+  if (proxyConfig.redirect) {
+    redirectUrl = proxyConfig.redirect(redirectUrl)
+  }
+  headers.host = proxyConfig.host + (proxyConfig.port ? ':' + proxyConfig.port : '')
+  headers.connection = 'close'
+
+  getProxyCookies(isHttps, headers.host).then((cookies = {}) => {
+    const mergedCookies = {...cookies}
+    console.log(mergedCookies)
+    if (proxyConfig.headers) {
+      const configCookieStr = proxyConfig.headers.cookie
+      if (configCookieStr) {
+        let cookieKv = configCookieStr.split(/\s*;\s*/)
+        for (let i = 0; i < cookieKv.length; i++) {
+          let cookiePair = cookieKv[i].split(/=/)
+          mergedCookies[cookiePair[0]] = cookiePair[1]
+        }
+      }
+    }
+    const mergedCookieArr = []
+    for (let key in mergedCookies) {
+      mergedCookieArr.push(`${key}=${mergedCookies[key]}`)
+    }
+    headers = {...headers, ...proxyConfig.headers, ...{
+      cookie: mergedCookieArr.join(';')
+    }}
+
+    const options = {
+      host: proxyConfig.host,
+      path: redirectUrl,
+      method: request.method,
+      headers: headers,
+      timeout: proxyConfig.timeout || 30000,
+      rejectUnauthorized: false,
+      agent: false
+    }
+    if (proxyConfig.port) {
+      options.port = proxyConfig.port
+    }
+    showProxyLog(proxyConfig, method, redirectUrl, params)
+    proxy(params, options)
+  })
 }
 
 module.exports = {
