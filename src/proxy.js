@@ -8,7 +8,9 @@ const utilsTool = require('./utils')
 
 const encoding = utilsTool.encoding
 
-const proxyReg = /^([^:]+):(\d+)$/
+const cacheCookies = {}
+
+const expires = 1000 * 30
 
 const showProxyLog = (options, method, redirectUrl, data) => {
   if (data.length > 2000) {
@@ -22,11 +24,25 @@ const showProxyLog = (options, method, redirectUrl, data) => {
   }
 }
 
-const getProxyCookies = (isHttps, host) => {
+const getProxyCookies = (host) => {
+  if (cacheCookies[host]) {
+    const {ts, cookies} = cacheCookies[host]
+    if (Date.now() - ts <= expires) {
+      return Promise.resolve(cookies)
+    }
+  }
   return new Promise((resolve) => {
     try {
-      chrome.getCookies(`http${isHttps? 's' : ''}://${host}`, function(err, cookies) {
-        resolve(cookies)
+      chrome.getCookies(host, function(err, cookies) {
+        if (!err) {
+          cacheCookies[host] = {
+            ts: Date.now(),
+            cookies
+          }
+          resolve(cookies)
+        } else {
+          resolve({})
+        }
       })
     } catch (e) {
       resolve({})
@@ -98,9 +114,8 @@ const doProxy = (request, response, headers, params, method, proxyConfig) => {
   headers.host = proxyConfig.host + (proxyConfig.port ? ':' + proxyConfig.port : '')
   headers.connection = 'close'
 
-  getProxyCookies(isHttps, headers.host).then((cookies = {}) => {
+  getProxyCookies(`http${isHttps? 's' : ''}://${headers.host}`).then((cookies = {}) => {
     const mergedCookies = {...cookies}
-    console.log(mergedCookies)
     if (proxyConfig.headers) {
       const configCookieStr = proxyConfig.headers.cookie
       if (configCookieStr) {
