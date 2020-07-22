@@ -10,7 +10,9 @@ const encoding = utilsTool.encoding
 
 const cacheCookies = {}
 
-const expires = 1000 * 30
+const expires = 1000 * 60 * 10
+
+
 
 const showProxyLog = (options, method, redirectUrl, data) => {
   if (data.length > 2000) {
@@ -31,6 +33,7 @@ const getProxyCookies = (host) => {
       return Promise.resolve(cookies)
     }
   }
+
   return new Promise((resolve) => {
     try {
       chrome.getCookies(host, function(err, cookies) {
@@ -128,7 +131,7 @@ const doProxy = (request, response, headers, params, method, proxyConfig) => {
     }
     const mergedCookieArr = []
     for (let key in mergedCookies) {
-      mergedCookieArr.push(`${key}=${mergedCookies[key]}`)
+      mergedCookieArr.push(`${key}=${escape(unescape(mergedCookies[key]))}`)
     }
     headers = {...headers, ...proxyConfig.headers, ...{
       cookie: mergedCookieArr.join(';')

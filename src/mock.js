@@ -10,7 +10,7 @@ const cachedApis = {}
 
 const slashReg = /^\/|\/$/g
 
-const semReg = /\s*;\s*$/m
+const semReg = /\s*;\s*$/
 
 const metaReg = /^\s*\/\*([\s\S]*?)\*\//m
 
