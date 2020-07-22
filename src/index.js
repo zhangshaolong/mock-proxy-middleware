@@ -21,13 +21,14 @@ const encoding = utilsTool.encoding
 
 /**
   cfgs = [{
-    rules: [/^\/api\//, /^\/common-api\//]
+    rules: ['^/api/', /^\/common-api\//]
     proxyConfig: {
       host: '1.1.1.1',
       port: 8080,
       redirect: (path) => {return path},
       timeout: 30000,
       isHttps: false,
+      syncCookie: 1000 * 60 * 10,
       headers: {
         cookie: 'xxx'
       },

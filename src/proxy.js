@@ -10,9 +10,7 @@ const encoding = utilsTool.encoding
 
 const cacheCookies = {}
 
-const expires = 1000 * 60 * 10
-
-
+const pendings = {}
 
 const showProxyLog = (options, method, redirectUrl, data) => {
   if (data.length > 2000) {
@@ -26,25 +24,54 @@ const showProxyLog = (options, method, redirectUrl, data) => {
   }
 }
 
-const getProxyCookies = (host) => {
-  if (cacheCookies[host]) {
-    const {ts, cookies} = cacheCookies[host]
-    if (Date.now() - ts <= expires) {
+const flushQueues = (host, cookies) => {
+  if (pendings[host]) {
+    pendings[host].forEach((resolve) => {
+      resolve(cookies)
+    })
+    pendings[host].length = 0
+  }
+}
+
+const getProxyCookies = (host, syncCookie) => {
+  let cachedHost = cacheCookies[host]
+  if (!cachedHost) {
+    cachedHost = cacheCookies[host] = {}
+  }
+  const {ts, cookies, status} = cachedHost
+  if (ts) {
+    if (syncCookie) {
+      if (Date.now() - ts <= syncCookie) {
+        return Promise.resolve(cookies)
+      }
+    } else {
       return Promise.resolve(cookies)
     }
   }
-
+  if (status === 'pending') {
+    let queues = pendings[host]
+    if (!queues) {
+      queues = pendings[host] = []
+    }
+    return new Promise((resolve) => {
+      queues.push(resolve)
+    })
+  }
   return new Promise((resolve) => {
     try {
+      cachedHost.status = 'pending'
       chrome.getCookies(host, function(err, cookies) {
         if (!err) {
+          resolve(cookies)
+          flushQueues(host, cookies)
           cacheCookies[host] = {
             ts: Date.now(),
-            cookies
+            cookies,
+            status: 'done'
           }
-          resolve(cookies)
         } else {
           resolve({})
+          flushQueues(host, {})
         }
       })
     } catch (e) {
@@ -117,7 +144,7 @@ const doProxy = (request, response, headers, params, method, proxyConfig) => {
   headers.host = proxyConfig.host + (proxyConfig.port ? ':' + proxyConfig.port : '')
   headers.connection = 'close'
 
-  getProxyCookies(`http${isHttps? 's' : ''}://${headers.host}`).then((cookies = {}) => {
+  getProxyCookies(`http${isHttps? 's' : ''}://${headers.host}`, proxyConfig.syncCookie).then((cookies = {}) => {
     const mergedCookies = {...cookies}
     if (proxyConfig.headers) {
       const configCookieStr = proxyConfig.headers.cookie
