@@ -28,7 +28,6 @@ const encoding = utilsTool.encoding
       redirect: (path) => {return path},
       timeout: 30000,
       isHttps: false,
-      syncCookie: 1000 * 60 * 10,
       headers: {
         cookie: 'xxx'
       },
