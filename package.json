@@ -19,6 +19,9 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.com/"
+  },
   "author": "zhangshaolong",
   "license": "MIT",
   "bugs": {
