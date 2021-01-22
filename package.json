@@ -16,6 +16,9 @@
     "proxy",
     "server"
   ],
+  "files": [
+    "dist"
+  ],
   "author": "zhangshaolong",
   "license": "MIT",
   "bugs": {
