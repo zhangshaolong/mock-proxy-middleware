@@ -45,7 +45,6 @@ const getProxy = (request, proxyConfig) => {
       if (excludes) {
         for (let i = 0; i < excludes.length; i++) {
           const exclude = excludes[i]
-          console.log(request.path, exclude)
           if (typeof exclude === 'function') {
             if (exclude(request, proxyConfig)) {
               return false
