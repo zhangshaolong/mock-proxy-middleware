@@ -38,7 +38,7 @@ app.use(mockMiddleware(
       ext: '.js'
     }
   }],
-  '/xxx/xxx/personal_path_config.js' // 第二个参数可以设置为一个绝对路径的config path，设置的规则会覆盖第一个配置的相同rule对应的配置。为了解决多人协作代码冲突问题，这个文件需要设置为gitignore文件
+  '/xxx/xxx/personal_path_config.js' // 可选参数，可以设置为一个绝对路径的config path，设置的规则会覆盖第一个配置的相同rule对应的配置。为了解决多人协作代码冲突问题，这个文件需要设置为gitignore文件
 ));
 ```
 for example，a api like '/common-api/get_user_info', you can define a js file at
