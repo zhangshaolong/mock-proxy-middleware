@@ -14,30 +14,32 @@ if you use express server, you can use it like here:
 ```javascript
 var app = express()
 
-app.use(mockMiddleware([{
-  rules: ['^/api/', '^/common-api/'], // 字符串规则和正则规则
-  proxyConfig: {
-    host: '12.12.12.12',
-    port: 8080,
-    isHttps: false, // 是否以https协议进行转发，代理的时候会根据配置选择协议，这里配置的isHttps优先级最高，如果这里没设置，那么协议和源协议一致
-    timeout: 30000, // ms, default 3000ms
-    headers: { // 可以设置一些header信息到代理服务器
-      cookie: 'xxxx'
+app.use(mockMiddleware(
+  [{
+    rules: ['^/api/', '^/common-api/'], // 字符串规则和正则规则
+    proxyConfig: {
+      host: '12.12.12.12',
+      port: 8080,
+      isHttps: false, // 是否以https协议进行转发，代理的时候会根据配置选择协议，这里配置的isHttps优先级最高，如果这里没设置，那么协议和源协议一致
+      timeout: 30000, // ms, default 3000ms
+      headers: { // 可以设置一些header信息到代理服务器
+        cookie: 'xxxx'
+      },
+      redirect: (path) => { // could config rredirect path for remote api
+        return path
+      },
+      excludes: [ // when use proxy mode, this apis use local mode
+        '^/api/get_index_data/', // string
+        /^\/api\/user_info/ // regexp
+      ]
     },
-    redirect: (path) => { // could config rredirect path for remote api
-      return path
-    },
-    excludes: [ // when use proxy mode, this apis use local mode
-      '^/api/get_index_data/', // string
-      /^\/api\/user_info/ // regexp
-    ]
-  },
-  mockConfig: {
-    path: 'mock', // project`s mock dir name， default 'mock'
-    ext: '.js'
-  }
-
-}]));
+    mockConfig: {
+      path: 'mock', // project`s mock dir name， default 'mock'
+      ext: '.js'
+    }
+  }],
+  '/xxx/xxx/personal_path_config.js' // 第二个参数可以设置为一个绝对路径的config path，设置的规则会覆盖第一个配置的相同rule对应的配置。为了解决多人协作代码冲突问题，这个文件需要设置为gitignore文件
+));
 ```
 for example，a api like '/common-api/get_user_info', you can define a js file at
 ${project}/mock/common-api/get_user_info.js, it`s content like
