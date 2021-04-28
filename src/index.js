@@ -20,7 +20,7 @@ const mockTool = require('./mock')
 const encoding = utilsTool.encoding
 
 /**
-  cfgs = [{
+  publicConfigs = [{
     rules: ['^/api/', /^\/common-api\//]
     proxyConfig: {
       host: '1.1.1.1',
@@ -42,22 +42,50 @@ const encoding = utilsTool.encoding
       ext: '.js'
     }
   }]
-  |
-  cfgs = ${dync_config_path}
+  ||
+  publicConfigs = ${publicConfigPath}
 */
 
-module.exports = (cfgs) => {
-  let dyncConfigPath
-  if (typeof cfgs === 'string') {
-    dyncConfigPath = cfgs
+const mergeConfigs = (publicConfigs, personalConfigs) => {
+  const ruleMap = {}
+  for (let i = 0; i < publicConfigs.length; i++) {
+    const publicConfig = publicConfigs[i]
+    const rules = [].concat(publicConfig.rules)
+    for (let j = 0; j < rules.length; j++) {
+      const rule = rules[j]
+      ruleMap[rule] = Object.assign({}, publicConfig, {rules: [rule]})
+    }
+  }
+  for (let i = 0; i < personalConfigs.length; i++) {
+    const personalConfig = personalConfigs[i]
+    const rules = [].concat(personalConfig.rules)
+    for (let j = 0; j < rules.length; j++) {
+      const rule = rules[j]
+      ruleMap[rule] = Object.assign({}, ruleMap[rule], personalConfig, {rules: [rule]})
+    }
+  }
+  return Object.keys(ruleMap).map((key) => ruleMap[key])
+}
+
+module.exports = (publicConfigs, personalConfigPath) => {
+  let publicConfigPath
+  if (typeof publicConfigs === 'string') {
+    publicConfigPath = publicConfigs
   }
   return (req, res, next) => {
-    if (dyncConfigPath) {
-      delete require.cache[dyncConfigPath]
-      cfgs = require(dyncConfigPath)
+    if (publicConfigPath) {
+      delete require.cache[publicConfigPath]
+      publicConfigs = require(publicConfigPath)
+    }
+    if (typeof personalConfigPath === 'string') {
+      delete require.cache[personalConfigPath]
+      try {
+        const personalConfigs = require(personalConfigPath)
+        publicConfigs = mergeConfigs(publicConfigs, personalConfigs)
+      } catch (e) {}
     }
     const urlInfo = URL.parse(req.url, true)
-    const cfg = utilsTool.getApiConfig(urlInfo.pathname, cfgs)
+    const cfg = utilsTool.getApiConfig(urlInfo.pathname, publicConfigs)
     if (cfg) {
       const contentType = req.headers['content-type'] || 'text/plain;charset=' + encoding
       const isFormData = contentType.indexOf('application/x-www-form-urlencoded') > -1
@@ -75,7 +103,7 @@ module.exports = (cfgs) => {
         }
       })
     } else if (urlInfo.pathname === '/show-apis') {
-      res.end(require('./render')(utilsTool.getApiDocData(cfgs)))
+      res.end(require('./render')(utilsTool.getApiDocData(publicConfigs)))
     } else {
       return next()
     }
