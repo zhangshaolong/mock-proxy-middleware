@@ -1,6 +1,6 @@
 {
   "name": "mock-proxy-middleware",
-  "version": "2.0.14",
+  "version": "2.0.15",
   "description": "local server mock and proxy tool",
   "main": "dist/index.js",
   "scripts": {
@@ -36,5 +36,7 @@
     "simplite": "0.0.2",
     "simplite-loader": "0.0.3"
   },
-  "dependencies": {}
+  "dependencies": {
+    "chrome-cookies-secure": "^1.3.2"
+  }
 }

@@ -2,6 +2,8 @@ const http = require('http')
 
 const https = require('https')
 
+const chrome = require('chrome-cookies-secure')
+
 const utilsTool = require('./utils')
 
 const encoding = utilsTool.encoding
@@ -22,6 +24,43 @@ const showProxyLog = (options, method, redirectUrl, data) => {
       `proxy request: \n\tHost:${options.host}\n\tPort:${options.port}\n\tMethod:${method}\n\tPath:${redirectUrl}\n\tParams:${data}`
     )
   }
+}
+
+const flushQueues = (host, cookies) => {
+  const {queues} = pendings[host]
+  queues.forEach((resolve) => {
+    resolve(cookies)
+  })
+}
+
+const getProxyCookies = (host) => {
+  let pending = pendings[host]
+  if (!pending) {
+    pending = pendings[host] = {
+      status: 'done',
+      queues: []
+    }
+  }
+  const {status, queues} = pending
+  if (status === 'pending') {
+    return new Promise((resolve) => {
+      queues.push(resolve)
+    })
+  }
+  return new Promise((resolve) => {
+    try {
+      pending.status = 'pending'
+      chrome.getCookies(host, function(_, cookies = {}) {
+        resolve(cookies)
+        flushQueues(host, cookies)
+        pending.status = 'done'
+      })
+    } catch (e) {
+      resolve({})
+      flushQueues(host, cookies)
+      pending.status = 'done'
+    }
+  })
 }
 
 const proxyResponse = (proxyRes, res) => {
@@ -93,51 +132,45 @@ const doProxy = (request, response, headers, params, method, proxyConfig) => {
   headers.host = proxyConfig.host + (proxyConfig.port ? ':' + proxyConfig.port : '')
   headers.connection = 'close'
 
-  if (proxyConfig.headers) {
-    const mergedCookies = {}
-    if (headers.cookie) {
-      let cookieKv = headers.cookie.split(/\s*;\s*/)
-      for (let i = 0; i < cookieKv.length; i++) {
-        let cookiePair = cookiePairReg.exec(cookieKv[i])
-        mergedCookies[cookiePair[1]] = cookiePair[2]
-      }
-    }
-    const configCookieStr = proxyConfig.headers.cookie
-    if (configCookieStr) {
-      let cookieKv = configCookieStr.split(/\s*;\s*/)
-      for (let i = 0; i < cookieKv.length; i++) {
-        let cookiePair = cookiePairReg.exec(cookieKv[i])
-        mergedCookies[cookiePair[1]] = cookiePair[2]
-      }
-      const mergedCookieArr = []
-      for (let key in mergedCookies) {
-        const val = mergedCookies[key]
-        if (!headerCharRegex.test(val)) {
-          mergedCookieArr.push(`${key}=${val}`)
+  getProxyCookies(`http${isHttps? 's' : ''}://${headers.host}`).then((cookies) => {
+    const mergedCookies = {...cookies}
+    if (proxyConfig.headers) {
+      const configCookieStr = proxyConfig.headers.cookie
+      if (configCookieStr) {
+        let cookieKv = configCookieStr.split(/\s*;\s*/)
+        for (let i = 0; i < cookieKv.length; i++) {
+          let cookiePair = cookiePairReg.exec(cookieKv[i])
+          mergedCookies[cookiePair[1]] = cookiePair[2]
         }
       }
-      headers = {...headers, ...proxyConfig.headers, ...{
+    }
+
+    const mergedCookieArr = []
+    for (let key in mergedCookies) {
+      const val = mergedCookies[key]
+      if (!headerCharRegex.test(val)) {
+        mergedCookieArr.push(`${key}=${val}`)
+      }
+    }
+    headers = {...headers, ...proxyConfig.headers, ...{
       cookie: mergedCookieArr.join(';')
     }}
-    } else {
-      headers = { ...headers, ...proxyConfig.headers }
-    }
-  }
 
-  const options = {
-    host: proxyConfig.host,
-    path: redirectUrl,
-    method: request.method,
-    headers: headers,
-    timeout: proxyConfig.timeout || 30000,
-    rejectUnauthorized: false,
-    agent: false
-  }
-  if (proxyConfig.port) {
-    options.port = proxyConfig.port
-  }
-  showProxyLog(proxyConfig, method, redirectUrl, params)
-  proxy(params, options)
+    const options = {
+      host: proxyConfig.host,
+      path: redirectUrl,
+      method: request.method,
+      headers: headers,
+      timeout: proxyConfig.timeout || 30000,
+      rejectUnauthorized: false,
+      agent: false
+    }
+    if (proxyConfig.port) {
+      options.port = proxyConfig.port
+    }
+    showProxyLog(proxyConfig, method, redirectUrl, params)
+    proxy(params, options)
+  })
 }
 
 module.exports = {
