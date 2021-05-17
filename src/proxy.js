@@ -8,6 +8,10 @@ const encoding = utilsTool.encoding
 
 const pendings = {}
 
+const cookiePairReg = /^([^=]+)=(.*)$/
+
+const headerCharRegex = /[^\t\x20-\x7e\x80-\xff]/
+
 const showProxyLog = (options, method, redirectUrl, data) => {
   if (data.length > 2000) {
     console.log(
@@ -94,20 +98,23 @@ const doProxy = (request, response, headers, params, method, proxyConfig) => {
     if (headers.cookie) {
       let cookieKv = headers.cookie.split(/\s*;\s*/)
       for (let i = 0; i < cookieKv.length; i++) {
-        let cookiePair = cookieKv[i].split(/=/)
-        mergedCookies[cookiePair[0]] = cookiePair[1]
+        let cookiePair = cookiePairReg.exec(cookieKv[i])
+        mergedCookies[cookiePair[1]] = cookiePair[2]
       }
     }
     const configCookieStr = proxyConfig.headers.cookie
     if (configCookieStr) {
       let cookieKv = configCookieStr.split(/\s*;\s*/)
       for (let i = 0; i < cookieKv.length; i++) {
-        let cookiePair = cookieKv[i].split(/=/)
-        mergedCookies[cookiePair[0]] = cookiePair[1]
+        let cookiePair = cookiePairReg.exec(cookieKv[i])
+        mergedCookies[cookiePair[1]] = cookiePair[2]
       }
       const mergedCookieArr = []
       for (let key in mergedCookies) {
-        mergedCookieArr.push(`${key}=${escape(unescape(mergedCookies[key]))}`)
+        const val = mergedCookies[key]
+        if (!headerCharRegex.test(val)) {
+          mergedCookieArr.push(`${key}=${val}`)
+        }
       }
       headers = {...headers, ...proxyConfig.headers, ...{
       cookie: mergedCookieArr.join(';')
