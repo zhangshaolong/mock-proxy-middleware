@@ -53,7 +53,9 @@ const getApiConfig = (pathName, cfgs) => {
 }
 
 const getParams = (request, query, method, isFormData, isProxy) => {
-  if (method === 'POST') {
+  if (method === 'GET' || method === 'HEAD') {
+    return Promise.resolve(isProxy ? JSON.stringify(query) : query)
+  } else {
     let bodyData = request.body
     if (bodyData) {
       return Promise.resolve([isFormData ? queryString : JSON][isProxy ? 'stringify' : 'parse'](bodyData))
@@ -65,8 +67,6 @@ const getParams = (request, query, method, isFormData, isProxy) => {
         return data
       })
     }
-  } else if (method === 'GET') {
-    return Promise.resolve(isProxy ? JSON.stringify(query) : query)
   }
 }
 

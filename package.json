@@ -1,6 +1,6 @@
 {
   "name": "mock-proxy-middleware",
-  "version": "2.0.15",
+  "version": "2.0.16",
   "description": "local server mock and proxy tool",
   "main": "dist/index.js",
   "scripts": {

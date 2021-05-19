@@ -117,10 +117,10 @@ const doProxy = (request, response, headers, params, method, proxyConfig) => {
       )
       console.log('proxyReq error: ' + e.message)
     })
-    if (method === 'POST') {
-      proxyReq.end(postData, encoding)
-    } else {
+    if (method === 'GET' || method === 'HEAD') {
       request.pipe(proxyReq)
+    } else {
+      proxyReq.end(postData, encoding)
     }
   }
 
