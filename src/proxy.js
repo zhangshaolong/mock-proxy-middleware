@@ -99,7 +99,9 @@ const doProxy = (request, response, headers, params, method, proxyConfig) => {
       let cookieKv = headers.cookie.split(/\s*;\s*/)
       for (let i = 0; i < cookieKv.length; i++) {
         let cookiePair = cookiePairReg.exec(cookieKv[i])
-        mergedCookies[cookiePair[1]] = cookiePair[2]
+        if (cookiePair) {
+          mergedCookies[cookiePair[1]] = cookiePair[2]
+        }
       }
     }
     const configCookieStr = proxyConfig.headers.cookie
@@ -107,7 +109,9 @@ const doProxy = (request, response, headers, params, method, proxyConfig) => {
       let cookieKv = configCookieStr.split(/\s*;\s*/)
       for (let i = 0; i < cookieKv.length; i++) {
         let cookiePair = cookiePairReg.exec(cookieKv[i])
-        mergedCookies[cookiePair[1]] = cookiePair[2]
+        if (cookiePair) {
+          mergedCookies[cookiePair[1]] = cookiePair[2]
+        }
       }
       const mergedCookieArr = []
       for (let key in mergedCookies) {
