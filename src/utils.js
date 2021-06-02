@@ -62,7 +62,9 @@ const getParams = (request, query, method, isFormData, isProxy) => {
     } else {
       return mergeData(request).then((data) => {
         if (!isProxy) {
-          data = (isFormData ? queryString : JSON).parse(data.toString())
+          if (data.length) {
+            data = (isFormData ? queryString : JSON).parse(data.toString())
+          }
         }
         return data
       })
