@@ -24,13 +24,27 @@ const showProxyLog = (options, method, redirectUrl, data) => {
   }
 }
 
+const trimCookie = (val) => {
+  return val.replace(/\s*HttpOnly[^;]*;?/ig, '').replace(/\s*Secure[^;]*;?/ig, '').replace(/\s*SameSite[^;]*;?/ig, '')
+}
+
 const proxyResponse = (proxyRes, res) => {
   let headers = proxyRes.headers
   let statusCode = proxyRes.statusCode
   try {
     if (headers) {
       for (let key in headers) {
-        res.setHeader(key, headers[key])
+        let val = headers[key]
+        if (key.toLowerCase() === 'set-cookie') {
+          if (Array.isArray(val)) {
+            for (let i = 0; i < val.length; i++) {
+              val[i] = trimCookie(val[i])
+            }
+          } else if (typeof val === 'string') {
+            val = trimCookie(val)
+          }
+        }
+        res.setHeader(key, val)
       }
     }
     res.writeHead(statusCode)
