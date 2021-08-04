@@ -47,13 +47,15 @@ const encoding = utilsTool.encoding
 */
 
 const mergeConfigs = (publicConfigs, personalConfigs) => {
-  const ruleMap = {}
+  const publicRuleMap = {}
+  const personalRuleMap = {}
+  const mergedConfigs = []
   for (let i = 0; i < publicConfigs.length; i++) {
     const publicConfig = publicConfigs[i]
     const rules = [].concat(publicConfig.rules)
     for (let j = 0; j < rules.length; j++) {
       const rule = rules[j]
-      ruleMap[rule] = Object.assign({}, publicConfig, {rules: [rule]})
+      publicRuleMap[rule] = Object.assign({}, publicConfig, {rules: [rule]})
     }
   }
   for (let i = 0; i < personalConfigs.length; i++) {
@@ -61,10 +63,27 @@ const mergeConfigs = (publicConfigs, personalConfigs) => {
     const rules = [].concat(personalConfig.rules)
     for (let j = 0; j < rules.length; j++) {
       const rule = rules[j]
-      ruleMap[rule] = Object.assign({}, ruleMap[rule], personalConfig, {rules: [rule]})
+      personalRuleMap[rule] = Object.assign({}, publicRuleMap[rule], personalConfig, {rules: [rule]})
     }
   }
-  return Object.keys(ruleMap).map((key) => ruleMap[key])
+  for (let i = 0; i < personalConfigs.length; i++) {
+    const personalConfig = personalConfigs[i]
+    const rules = [].concat(personalConfig.rules)
+    for (let j = 0; j < rules.length; j++) {
+      mergedConfigs.push(personalRuleMap[rules[j]])
+    }
+  }
+  for (let i = 0; i < publicConfigs.length; i++) {
+    const publicConfig = publicConfigs[i]
+    const rules = [].concat(publicConfig.rules)
+    for (let j = 0; j < rules.length; j++) {
+      const rule = rules[j]
+      if (!personalRuleMap[rule]) {
+        mergedConfigs.push(publicRuleMap[rule])
+      }
+    }
+  }
+  return mergedConfigs
 }
 
 module.exports = (publicConfigs, personalConfigPath) => {
