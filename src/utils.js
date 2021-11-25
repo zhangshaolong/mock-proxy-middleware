@@ -21,13 +21,13 @@ const mergeData = (original) => {
       let len = chunks.length
       switch (len) {
         case 0:
-          data = new Buffer(0)
+          data = Buffer.alloc(0)
           break
         case 1:
           data = chunks[0]
           break
         default:
-          data = new Buffer(size)
+          data = Buffer.alloc(size)
           for (let i = 0, pos = 0; i < len; i++) {
             let chunk = chunks[i]
             chunk.copy(data, pos)

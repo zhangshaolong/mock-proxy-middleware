@@ -31,7 +31,8 @@ app.use(mockMiddleware(
       excludes: [ // when use proxy mode, this apis use local mode
         '^/api/get_index_data/', // string
         /^\/api\/user_info/ // regexp
-      ]
+      ],
+      fillMissingMock: false // fill missing mock file when lost
     },
     mockConfig: {
       path: 'mock', // project`s mock dir name， default 'mock'
@@ -115,3 +116,6 @@ devServer: {
 if you look at all of apis at this project, input 'https?:{host}/show-apis', need has mock file and meta about api description
 
 scaffold is a demo project with mock proxy tool [scaffold](https://github.com/zhangshaolong/scaffold "scaffold lib")
+
+serverany is a local static server with the mock proxy tool [serverany](https://github.com/zhangshaolong/serverany "serverany")
+

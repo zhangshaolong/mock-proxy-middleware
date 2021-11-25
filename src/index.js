@@ -35,7 +35,8 @@ const encoding = utilsTool.encoding
         '^/api/get_index_data',
         '^/api/user_info',
         /^\/test-api\/mock\//
-      ]
+      ],
+      fillMissingMock: false
     },
     mockConfig: {
       path: 'mock', // default dir is 'mock' under project`s path
@@ -116,7 +117,12 @@ module.exports = (publicConfigs, personalConfigPath) => {
       let proxyConfig = proxyTool.getProxy(req, cfg.proxyConfig)
       utilsTool.getParams(req, urlInfo.query, method, isFormData, proxyConfig).then((params) => {
         if (proxyConfig) {
-          proxyTool.doProxy(req, res, headers, params, method, proxyConfig)
+          const promise = proxyTool.doProxy(req, res, headers, params, method, proxyConfig)
+          if (proxyConfig.fillMissingMock) {
+            promise.then((buffer) => {
+              mockTool.fillMissingMock(urlInfo.pathname, buffer, cfg)
+            })
+          }
         } else {
           mockTool.doMock(urlInfo.pathname, req, res, params, cfg)
         }

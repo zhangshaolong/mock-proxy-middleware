@@ -6,8 +6,6 @@ const utilsTool = require('./utils')
 
 const encoding = utilsTool.encoding
 
-const pendings = {}
-
 const cookiePairReg = /^([^=]+)=(.*)$/
 
 const headerCharRegex = /[^\t\x20-\x7e\x80-\xff]/
@@ -51,8 +49,12 @@ const proxyResponse = (proxyRes, res) => {
   } catch (e) {
     console.log('setHeader error', e.message)
   }
-  utilsTool.mergeData(proxyRes).then((data) => {
+  return utilsTool.mergeData(proxyRes).then((data) => {
     res.end(data, encoding)
+    return {
+      buffer: data,
+      headers: headers
+    }
   })
 }
 
@@ -79,26 +81,6 @@ const getProxy = (request, proxyConfig) => {
 }
 
 const doProxy = (request, response, headers, params, method, proxyConfig) => {
-  const proxy = (postData, options) => {
-    let proxyReq = (isHttps ? https : http)['request'](options, (proxyRes) => {
-      proxyResponse(proxyRes, response, encoding)
-    })
-    proxyReq.on('error', (e) => {
-      response.end(
-        JSON.stringify({
-          status: 500,
-          e: e.message
-        })
-      )
-      console.log('proxyReq error: ' + e.message)
-    })
-    if (method === 'GET' || method === 'HEAD') {
-      request.pipe(proxyReq)
-    } else {
-      proxyReq.end(postData, encoding)
-    }
-  }
-
   const isHttps = proxyConfig.isHttps != null ? proxyConfig.isHttps : request.protocol === 'https'
   let redirectUrl = request.url
   if (proxyConfig.redirect) {
@@ -155,7 +137,26 @@ const doProxy = (request, response, headers, params, method, proxyConfig) => {
     options.port = proxyConfig.port
   }
   showProxyLog(proxyConfig, method, redirectUrl, params)
-  proxy(params, options)
+
+  return new Promise((resolve) => {
+    let proxyReq = (isHttps ? https : http)['request'](options, (proxyRes) => {
+      proxyResponse(proxyRes, response, encoding).then(resolve)
+    })
+    proxyReq.on('error', (e) => {
+      response.end(
+        JSON.stringify({
+          status: 500,
+          e: e.message
+        })
+      )
+      console.log('proxyReq error: ' + e.message)
+    })
+    if (method === 'GET' || method === 'HEAD') {
+      request.pipe(proxyReq)
+    } else {
+      proxyReq.end(params, encoding)
+    }
+  });
 }
 
 module.exports = {

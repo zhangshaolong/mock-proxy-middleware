@@ -2,6 +2,8 @@ const path = require('path')
 
 const fs = require('fs')
 
+const zlib = require('zlib')
+
 const utilsTool = require('./utils')
 
 const encoding = utilsTool.encoding
@@ -106,29 +108,34 @@ const getMockDataFromFilePath = (pathName, params, request, response) => {
   }
 }
 
-const doMock = (pathName, request, response, params, options) => {
+const getMockPath = (pathName, options) => {
   let mockPath = (options.mockConfig && options.mockConfig.path) || 'mock'
-  try {
-    const rules = [].concat(options.rules)
-    const len = rules.length
-    for (let i = 0; i < len; i++) {
-      let rule = new RegExp(rules[i])
-      let isApi = false
-      pathName.replace(rule, (match) => {
-        pathName = pathName.replace(match, '_').replace(/^_|_$/, '')
-        const parts = pathName.replace(slashReg, '').split(/\//)
-        pathName = path.resolve(
-          mockPath,
-          match.replace(slashReg, '').replace(/\//g, '_'),
-          parts.join('_')
-        )
-        isApi = true
-      })
-      if (isApi) {
-        break
-      }
+  const rules = [].concat(options.rules)
+  const len = rules.length
+  for (let i = 0; i < len; i++) {
+    let rule = new RegExp(rules[i])
+    let isApi = false
+    pathName.replace(rule, (match) => {
+      pathName = pathName.replace(match, '_').replace(/^_|_$/, '')
+      const parts = pathName.replace(slashReg, '').split(/\//)
+      pathName = path.resolve(
+        mockPath,
+        match.replace(slashReg, '').replace(/\//g, '_'),
+        parts.join('_')
+      )
+      isApi = true
+    })
+    if (isApi) {
+      break
     }
-    pathName += (options.mockConfig && options.mockConfig.ext) || '.js'
+  }
+  pathName += (options.mockConfig && options.mockConfig.ext) || '.js'
+  return pathName
+}
+
+const doMock = (pathName, request, response, params, options) => {
+  try {
+    pathName = getMockPath(pathName, options)
     const result = getMockDataFromFilePath(pathName, params, request, response)
     if (!isNaN(result.sleep)) {
       setTimeout(() => {
@@ -159,7 +166,28 @@ const doMock = (pathName, request, response, params, options) => {
   }
 }
 
+const fillMissingMock = (pathName, data, options) => {
+  try {
+    pathName = getMockPath(pathName, options)
+    if (!fs.existsSync(pathName)) {
+      const contentEncoding = data.headers['content-encoding']
+      let response
+      if (contentEncoding === 'gzip') {
+        response = JSON.stringify(JSON.parse(zlib.unzipSync(data.buffer).toString()), null, 2)
+      } else { // 只解析gzip压缩，其余先认为是未压缩数据
+        response = JSON.stringify(JSON.parse(data.buffer.toString()), null, 2)
+      }
+      fs.mkdirSync(pathName.replace(/\/[^/]+$/, ''), {recursive: true})
+      fs.writeFile(pathName, response, {encoding, flags: 'w+'}, (e) => {
+        console.log(e)
+      })
+    }
+  } catch (e) {
+    console.log(e)
+  }
+}
+
 module.exports = {
   doMock,
-  getMockDataFromFilePath
+  fillMissingMock
 }
