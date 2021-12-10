@@ -5,7 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "uglifyjs src/index.js -o dist/index.js -c & (uglifyjs src/utils.js -o dist/utils.js -c) & (uglifyjs src/mock.js -o dist/mock.js -c) & (uglifyjs src/proxy.js -o dist/proxy.js -c) & (node src/api-doc/build.js)"
+    "build": "rm -rf dist && mkdir dist && ((uglifyjs src/index.js -o dist/index.js -c) & (uglifyjs src/utils.js -o dist/utils.js -c) & (uglifyjs src/mock.js -o dist/mock.js -c) & (uglifyjs src/proxy.js -o dist/proxy.js -c) & (node src/api-doc/build.js))",
+    "prepublish": "npm run build"
   },
   "repository": {
     "type": "git",
