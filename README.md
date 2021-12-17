@@ -2,26 +2,23 @@
 前后端分离项目中的本地mock及远程代理
 注意：2.0+版本针对参数做了一些格式调整，不兼容低版本，如果需要低版本请找对应版本(1.9.30)npm包
 
-[qa mock for test demo](https://github.com/zhangshaolong/mock-proxy-tool "mock demo")
-
     install
     npm install mock-proxy-middleware --save-dev
 
 ```javascript
 var mockMiddleware = require('mock-proxy-middleware')
 ```
-if you use express server, you can use it like here:
-```javascript
-var app = express()
 
-app.use(mockMiddleware(
-  [{
+define config /xxx/config.js
+```javascript
+module.exports = [
+  {
     rules: ['^/api/', '^/common-api/'], // 字符串规则和正则规则
     proxyConfig: {
       host: '12.12.12.12',
       port: 8080,
       isHttps: false, // 是否以https协议进行转发，代理的时候会根据配置选择协议，这里配置的isHttps优先级最高，如果这里没设置，那么协议和源协议一致
-      timeout: 30000, // ms, default 3000ms
+      timeout: 30000, // ms, default 30000ms
       headers: { // 可以设置一些header信息到代理服务器
         cookie: 'xxxx'
       },
@@ -38,10 +35,31 @@ app.use(mockMiddleware(
       path: 'mock', // project`s mock dir name， default 'mock'
       ext: '.js'
     }
-  }],
-  '/xxx/xxx/personal_path_config.js' // 可选参数，可以设置为一个绝对路径的config path，设置的规则会覆盖第一个配置的相同rule对应的配置。为了解决多人协作代码冲突问题，这个文件需要设置为gitignore文件
+  }
+]
+```
+if you use express server, you can use it like here:
+```javascript
+var app = express()
+var config = require('/xxx/config')
+
+app.use(mockMiddleware(config));
+
+app.use(mockMiddleware(
+  '/xxx/config.js' // if set the config path as first param，the change is immediate effect when modify config
+));
+
+app.use(mockMiddleware(
+  config,
+  '/xxx/xxx/personal_path_config.js' // optional，prevent modification conflicts, could set the second param as self config, add this config file to .gitignore file
+));
+
+app.use(mockMiddleware(
+  '/xxx/config.js',
+  '/xxx/personal_path_config.js'
 ));
 ```
+
 for example，a api like '/common-api/get_user_info', you can define a js file at
 ${project}/mock/common-api/get_user_info.js, it`s content like
 ```javascript
@@ -83,33 +101,28 @@ ${project}/mock/api/a_b_c.js
 if you use gulp-connect server, you can use it like here:
 ```javascript
 var connect = require('gulp-connect');
+var config = require('/xxx/config');
 connect.server({
     host: host,
     port: port,
     root: ['/'],
     middleware: function(connect, opt) {
         return [
-            mockMiddleware([{
-                rules: ['^/api/', /^\/common-api\//] // string or regexp like ['^/api/', ...],
-                proxyConfig: { // proxy mode
-                    host: '1.1.1.1',
-                    port: 8080
-                },
-                mockConfig: {}
-            }])
+            mockMiddleware(config || '/xxx/config')  // if set a path of config, config is immediate effect
         ];
     }
 });
 ```
 if you use webpack-dev-server, you can use it like here on webpack.config.js:
 ```javascript
+var config = require('/xxx/config');
 devServer: {
   contentBase: '/dist',
   port: 8888,
   historyApiFallback: true,
   inline: true,
   before: function(app) {
-    app.use(mockProxyMiddleware(mockProxyFilePath)) // if set a path of config, config is immediate effect
+    app.use(mockProxyMiddleware(config || '/xxx/config')) // if set a path of config, config is immediate effect
   }
 }
 ```
@@ -118,4 +131,6 @@ if you look at all of apis at this project, input 'https?:{host}/show-apis', nee
 scaffold is a demo project with mock proxy tool [scaffold](https://github.com/zhangshaolong/scaffold "scaffold lib")
 
 serverany is a local static server with the mock proxy tool [serverany](https://github.com/zhangshaolong/serverany "serverany")
+
+[qa mock for test demo](https://github.com/zhangshaolong/mock-proxy-tool "mock demo")
 
