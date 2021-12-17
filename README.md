@@ -1,9 +1,9 @@
 # mock-proxy-middleware
-前后端分离项目中的本地mock及远程代理
-注意：2.0+版本针对参数做了一些格式调整，不兼容低版本，如果需要低版本请找对应版本(1.9.30)npm包
 
-    install
-    npm install mock-proxy-middleware --save-dev
+install
+```shell
+npm install mock-proxy-middleware --save-dev
+```
 
 ```javascript
 var mockMiddleware = require('mock-proxy-middleware')
@@ -62,6 +62,7 @@ app.use(mockMiddleware(
 
 for example，a api like '/common-api/get_user_info', you can define a js file at
 ${project}/mock/common-api/get_user_info.js, it`s content like
+
 ```javascript
 function (params) {
     return {
@@ -85,6 +86,7 @@ or
 }
 ```
 if you want to cache mock status by context, you can do it like this:
+
 ```javascript
 let times = 0
 return function (params) { // this 'return' is required
@@ -99,6 +101,7 @@ return function (params) { // this 'return' is required
 for example another, a api like '/api/a/b/c', you can define a js file at
 ${project}/mock/api/a_b_c.js
 if you use gulp-connect server, you can use it like here:
+
 ```javascript
 var connect = require('gulp-connect');
 var config = require('/xxx/config');
@@ -114,6 +117,7 @@ connect.server({
 });
 ```
 if you use webpack-dev-server, you can use it like here on webpack.config.js:
+
 ```javascript
 var config = require('/xxx/config');
 devServer: {
@@ -133,4 +137,7 @@ scaffold is a demo project with mock proxy tool [scaffold](https://github.com/zh
 serverany is a local static server with the mock proxy tool [serverany](https://github.com/zhangshaolong/serverany "serverany")
 
 [qa mock for test demo](https://github.com/zhangshaolong/mock-proxy-tool "mock demo")
+
+前后端分离项目中的本地mock及远程代理
+注意：2.0+版本针对参数做了一些格式调整，不兼容低版本，如果需要低版本请找对应版本(1.9.30)npm包
 
