@@ -1,5 +1,7 @@
 # mock-proxy-middleware
 
+前后端分离项目中的本地mock及远程代理
+
 install
 ```shell
 npm install mock-proxy-middleware --save-dev
@@ -13,16 +15,17 @@ define config /xxx/config.js
 ```javascript
 module.exports = [
   {
-    rules: ['^/api/', '^/common-api/'], // 字符串规则和正则规则
+    rules: ['^/api/', ^/common-api/], // array，typeof string or regexp
+    rules: '^/api/', // string or regexp
     proxyConfig: {
       host: '12.12.12.12',
       port: 8080,
-      isHttps: false, // 是否以https协议进行转发，代理的时候会根据配置选择协议，这里配置的isHttps优先级最高，如果这里没设置，那么协议和源协议一致
+      isHttps: false, // default the same with original
       timeout: 30000, // ms, default 30000ms
-      headers: { // 可以设置一些header信息到代理服务器
+      headers: { // set custom headers to proxy server, default proxy original headers
         cookie: 'xxxx'
       },
-      redirect: (path) => { // could config rredirect path for remote api
+      redirect: (path) => { // could config redirect path for remote api
         return path
       },
       excludes: [ // when use proxy mode, this apis use local mode
@@ -138,6 +141,5 @@ serverany is a local static server with the mock proxy tool [serverany](https://
 
 [qa mock for test demo](https://github.com/zhangshaolong/mock-proxy-tool "mock demo")
 
-前后端分离项目中的本地mock及远程代理
 注意：2.0+版本针对参数做了一些格式调整，不兼容低版本，如果需要低版本请找对应版本(1.9.30)npm包
 
