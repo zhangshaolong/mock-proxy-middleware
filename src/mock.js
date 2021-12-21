@@ -189,5 +189,6 @@ const fillMissingMock = (pathName, data, options) => {
 
 module.exports = {
   doMock,
-  fillMissingMock
+  fillMissingMock,
+  getMockDataFromFilePath
 }
