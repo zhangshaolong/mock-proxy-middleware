@@ -30,7 +30,10 @@ module.exports = [
       },
       excludes: [ // when use proxy mode, this apis use local mode
         '^/api/get_index_data/', // string
-        /^\/api\/user_info/ // regexp
+        /^\/api\/user_info/, // regexp
+        (request, proxyConfig) => { // function
+          return request.headers.xxx === '/xxxx/' // any logic
+        }
       ],
       fillMissingMock: false // fill missing mock file when lost
     },
