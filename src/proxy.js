@@ -10,6 +10,24 @@ const cookiePairReg = /^([^=]+)=(.*)$/
 
 const headerCharRegex = /[^\t\x20-\x7e\x80-\xff]/
 
+const refreshQueryString = (queryStr, params) => {
+  for (let ki in params) {
+    let has = false
+    let value = params[ki]
+    queryStr = queryStr.replace(new RegExp('([?#&]' + ki + '=)([^&$]*)'), (all, k, v) => {
+      has = true
+      if (value === '') {
+        return ''
+      }
+      return k + value
+    })
+    if (!has && value !== '') {
+      queryStr += '&' + ki + '=' + value
+    }
+  }
+  return queryStr.replace(/[?&]/, '?')
+}
+
 const showProxyLog = (options, method, redirectUrl, data) => {
   if (data.length > 2000) {
     console.log(
@@ -124,7 +142,7 @@ const doProxy = (request, response, headers, params, method, proxyConfig) => {
     }
   }
 
-  const options = {
+  let options = {
     host: proxyConfig.host,
     path: redirectUrl,
     method: request.method,
@@ -136,7 +154,35 @@ const doProxy = (request, response, headers, params, method, proxyConfig) => {
   if (proxyConfig.port) {
     options.port = proxyConfig.port
   }
-  showProxyLog(proxyConfig, method, redirectUrl, params)
+  const beforeRequest = proxyConfig.beforeRequest
+  if (beforeRequest) {
+    try {
+      let p = params;
+      const isBuffer = Buffer.isBuffer(params)
+      if (isBuffer) {
+        p = params.toString()
+      }
+      p = JSON.parse(p)
+      const extraData = beforeRequest(p, options)
+      if (extraData) {
+        const [extraParams = {}, extraOptions = {}] = extraData
+        options = {...options, ...extraOptions}
+        p = JSON.stringify({...p, ...extraParams})
+        if (isBuffer) {
+          p = Buffer.from(p)
+          options.headers['content-length'] = p.length
+        }
+        params = p
+        for (let key in extraParams) {
+          options.path = refreshQueryString(options.path, extraParams)
+          break;
+        }
+      }
+    } catch (e) {
+      console.log('beforeRequest called error', e)
+    }
+  }
+  showProxyLog(proxyConfig, method, options.path, params)
 
   return new Promise((resolve) => {
     let proxyReq = (isHttps ? https : http)['request'](options, (proxyRes) => {

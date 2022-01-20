@@ -35,7 +35,18 @@ module.exports = [
           return request.headers.xxx === '/xxxx/' // any logic
         }
       ],
-      fillMissingMock: false // fill missing mock file when lost
+      fillMissingMock: false, // fill missing mock file when lost
+      beforeRequest: (params, options) => {
+        return [
+          {
+            _token: 'xxxxx', // add some extra params or reset key:value in params
+          },
+          {
+            agent: false, // set some extra options for nodejs http(s).request`s options
+            auth: 'xxxx'
+          }
+        ]
+      }
     },
     mockConfig: {
       path: 'mock', // project`s mock dir name， default 'mock'
