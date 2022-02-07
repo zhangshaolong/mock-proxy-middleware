@@ -172,11 +172,13 @@ const fillMissingMock = (pathName, data, options) => {
     if (!fs.existsSync(pathName)) {
       const contentEncoding = data.headers['content-encoding']
       let response
+      let decode = data.buffer
       if (contentEncoding === 'gzip') {
-        response = JSON.stringify(JSON.parse(zlib.unzipSync(data.buffer).toString()), null, 2)
-      } else { // 只解析gzip压缩，其余先认为是未压缩数据
-        response = JSON.stringify(JSON.parse(data.buffer.toString()), null, 2)
+        decode = zlib.unzipSync(data.buffer)
+      } else if (contentEncoding === 'br') {
+        decode = zlib.brotliDecompressSync(data.buffer)
       }
+      response = JSON.stringify(JSON.parse(decode.toString()), null, 2)
       fs.mkdirSync(pathName.replace(/\/[^/]+$/, ''), {recursive: true})
       fs.writeFile(pathName, response, {encoding, flags: 'w+'}, (e) => {
         console.log(e)
